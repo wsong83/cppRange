@@ -66,10 +66,18 @@ namespace CppRange {
     //////////////////////////////////////////////
     // Helpers
 
+    // set compressed
+    void set_compress(bool b) { compressed = b; }
+
     // size of bit
     T size() const {
       return r_pair.first - r_pair.second + 1;
     } 
+
+    // valid range expression
+    bool is_valid() const {
+      return !(r_pair.first < r_pair.second);
+    }
 
     // check whether range r is enclosed in this range 
     template <calss Y>
@@ -89,6 +97,15 @@ namespace CppRange {
               );
     }
 
+    // check whether r has shared range with this range
+    template <class Y>
+    bool is_overlapped(const RangeElement<Y>& r) const {
+      return (!(r_pair.first < r.r_pair.second) && !(r.r_pair.first < r_pair.second));
+    }
+
+    // implicit convert from Range to bool
+    bool operator bool() const {return is_valid();}
+
   private:
     bool compressed;            // whether to compress single bit range when streamout
     std::pair<T, T> r_pair;     // specific range expression
@@ -103,7 +120,7 @@ namespace CppRange {
     return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
   }
 
-  // rhs range is enclosed 
+  // rhs range is enclosed in lhs
   template <class T, class Y>
   bool operator>= (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
     return lhs.is_enclosed(rhs);
@@ -125,6 +142,15 @@ namespace CppRange {
   template <class T, class Y>
   inline bool operator== (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
     return rhs.is_same(lhs);
+  }
+
+  // return the overlapped range
+  // function does not check the result's validation
+  template <class T, class Y>  
+  Range operator& (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+    return rv<T>(std::min<T>(lhs.r_pair.first, rhs.r_pair.first), 
+                 std::max<T>(lhs.r_pair.second, rhs.r_pair.second), 
+                 lhs.compressed);
   }
 
 
@@ -150,89 +176,132 @@ namespace CppRange {
     // Range with configuration
     Range(bool compress) : compressed(compress) {}
 
+    // type convert from different ranges
+    template <class Y>
+    Range(const Range<Y>& r)
+      : compressed(r.compressed) {
+      r_array.resize(r.r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++)
+        r_array[i] = r.r_array[i];
+    }
+
     //////////////////////////////////////////////
     // Helpers
 
+    // set compressed
+    void set_compress(bool b) { compressed = b; }
+
     // size of dimension
-    unsigned long size_dimension() const {
+    unsigned int size_dimension() const {
       return r_array.size();
     }
 
     // size of bits
     T size_bit() const {
       T rv(1);
-      BOOST_FOREACH(const RangeElement& r, r_array) {
-        rv = rv * r.size();
-      }
+      for(unsigned int i=0; i<r_array.size(); i++)
+        T = T * r_array[i].size();
       return rv;
     }
 
     // add a higher dimension
+    // this method is very expernsive, do not use if possible
     template <class Y>
     void push_front(const RangeElement<Y>& r) {
-      r_array.push_front(r);
+      r_array.insert(0, r);
+      r_array[0].set_compress(compressed);
     }
 
     // add a lower dimension
     template <class Y>
     void push_back(const RangeElement<Y>& r) {
       r_array.push_back(r);
+      r_array[r_array.size()-1].set_compress(compressed);
+    }
+
+    // check whether the range expression is valid
+    bool is_valid() const {
+      for(unsigned int i=0; i<r_array.size(); i++)
+        if(!r_array[i].is_valid()) return false;
+      return true;
     }
 
     // check whether range r is enclosed in this range 
     template <class Y>
     bool is_enclosed(const Range<Y>& r) const {
-      assert(size_dimension() == r.size_dimension());
-      list<dfgRangeElement<T> >::const_iterator lit = r_array.begin();
-      list<dfgRangeElement<Y> >::const_iterator rit = r.r_array.begin();
-      while(lit != r_array.end()) {
-        if(!(*lit >= *rit))
-          return false;
-      }
+      assert(r_array.size() == r.r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++)
+        if(!(r_array[i] >= r.r_array[i])) return false;
       return true;
     }
 
     // check whether r is equal with this range
     template <class Y>
     bool is_same(const Range<Y>& r) const {
-      assert(size_dimension() == r.size_dimension());
-      list<dfgRangeElement<T> >::const_iterator lit = r_array.begin();
-      list<dfgRangeElement<Y> >::const_iterator rit = r.r_array.begin();
-      while(lit != r_array.end()) {
-        if(!(*lit == *rit))
-          return false;
-      }
-      return false;
+      assert(r_array.size() == r.r_array.size());
+       for(unsigned int i=0; i<r_array.size(); i++)
+        if(r_array[i] != r.r_array[i]) return false;
+      return true;
     }
-    bool operator bool() const {return !r_array.empty();} 
+
+    // overlap range r with this range
+    template <class Y>
+    Range overlap(const Range<Y>& r) const {
+      assert(r_array.size() == r.r_array.size());
+      Range rv(compressed);
+      rv.r_array.reserve(r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++)
+        rv.r_array[i] = r_array[i] & r.r_array[i];
+      return rv;
+    }
+
+
+    // implicit convert from Range to bool
+    bool operator bool() const {return !r_array.empty() && is_valid();} 
 
   private:
     bool compressed;                       // whether to compress single bit range when streamout
     std::vector<RangeElement<T> > r_array; // the range array
   };
 
-  inline bool operator> (const Range& lhs, const Range& rhs) {
+  /////////////////////////////////////////////
+  // overload operators
+
+  // rhs range is enclosed in lhs (not equal)
+  template <class T, class Y>
+  bool operator> (const Range<T>& lhs, const Range<Y>& rhs) {
     return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
   }
 
-  inline bool operator>= (const Range& lhs, const Range& rhs) {
+  // rhs range is enclosed in lhs
+  template <class T, class Y>
+  bool operator>= (const Range<T>& lhs, const Range<Y>& rhs) {
     return lhs.is_enclosed(rhs);
   }
 
-  inline bool operator< (const Range& lhs, const Range& rhs) {
+  // lhs range is enclosed in rhs (not equal)
+  template <class T, class Y>
+  bool operator< (const Range<T>& lhs, const Range<Y>& rhs) {
     return rhs.is_enclosed(lhs) && !rhs.is_same(lhs);
   }
 
-  inline bool operator<= (const Range& lhs, const Range& rhs) {
+  // lhs range is enclosed in rhs
+  template <class T, class Y>
+  inline bool operator<= (const Range<T>& lhs, const Range<Y>& rhs) {
     return rhs.is_enclosed(lhs);
   }
   
+  // two ranges are equal
+  template <class T, class Y>  
   inline bool operator== (const Range& lhs, const Range& rhs) {
     return rhs.is_same(lhs);
   }
 
   // return the overlapped range
-  Range operator& (const Range& lhs, const Range& rhs);
+  template <class T, class Y>  
+  Range operator& (const Range<T>& lhs, const Range<Y>& rhs) {
+    return lhs.overlap(rhs);
+  }
 
   // return the combined range (in first), if not combination, return them in descending ordered
   std::pair<Range, Range> operator| (const Range& lhs, const Range& rhs);

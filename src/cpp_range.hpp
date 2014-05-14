@@ -97,10 +97,54 @@ namespace CppRange {
               );
     }
 
+    // weak order
+    template <class Y>
+    bool less(const RangeElement<Y>& r) const {
+      if(r_pair.first < r.r_pair.first)
+        return true;
+      else if(r_pair.first > r.r_pair.first)
+        return false;
+      else if(r_pair.second > r.r_pair.second)
+        return true;
+      else if(r_pair.second < r.r_pair.second)
+        return false;
+      else
+        return false;
+    }
+
     // check whether r has shared range with this range
     template <class Y>
     bool is_overlapped(const RangeElement<Y>& r) const {
       return (!(r_pair.first < r.r_pair.second) && !(r.r_pair.first < r_pair.second));
+    }
+
+    // simple combine without check
+    template <class Y>
+    RangeElement combine(const RangeElement<Y>& r) const {
+      return RangeElement(std::max(r_pair.first, r.r_pair.first),
+                          std::min(r_pair.second, r.r_pair.second),
+                          compressed);
+    }
+
+    // simple overlap without check
+    template <class Y>
+    RangeElement combine(const RangeElement<Y>& r) const {
+      return RangeElement(std::min(r_pair.first, r.r_pair.first),
+                          std::max(r_pair.second, r.r_pair.second),
+                          compressed);
+    }
+    
+    // simple reduce without check
+    template <class Y>
+    RangeElement reduce(const RangeElement<Y>& r) const {
+      if(less(r))
+        return RangeElement(std::min(r_pair.first, r.r_pair.second - 1),
+                            r_pair.second,
+                            compressed);
+      else
+        return RangeElement(r_pair.first,
+                            std::max(r_pair.second, r.r_pair.first + 1),
+                            compressed);
     }
 
     // implicit convert from Range to bool
@@ -144,13 +188,31 @@ namespace CppRange {
     return rhs.is_same(lhs);
   }
 
+  // two ranges are not equal
+  template <class T, class Y>
+  inline bool operator!= (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+    return !rhs.is_same(lhs);
+  }
+
   // return the overlapped range
   // function does not check the result's validation
   template <class T, class Y>  
   Range operator& (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
-    return rv<T>(std::min<T>(lhs.r_pair.first, rhs.r_pair.first), 
-                 std::max<T>(lhs.r_pair.second, rhs.r_pair.second), 
-                 lhs.compressed);
+    return lhs.overlap(rhs);
+  }
+
+  // return the combined range
+  // function does not check the result's validation
+  template <class T, class Y>  
+  Range operator| (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+    return lhs.combine(rhs);
+  }
+
+  // return the reduced range
+  // function does not check the result's validation
+  template <class T, class Y>  
+  Range operator- (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+    return lhs.reduce(rhs);
   }
 
 
@@ -244,7 +306,30 @@ namespace CppRange {
       return true;
     }
 
-    // overlap range r with this range
+    // check whether r is adjacent to this range
+    template <class Y>
+    bool is_adjacent(const Range<Y>& r) const {
+      if(!is_operable(r)) return false;
+      for(unsigned int i=0; i<r_array.size(); i++)
+        if(r_array[i].first + 1 >= r.r_array[i].second ||
+           r_r_array[i].first + 1 >= r_array[i].second)
+          return true;
+      return rv;
+    }
+      
+
+    // simple combine without check
+    template <class Y>
+    Range combine(const Range<Y>& r) const {
+      assert(r_array.size() == r.r_array.size());
+      Range rv(compressed);
+      rv.r_array.reserve(r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++)
+        rv.r_array[i] = r_array[i] | r.r_array[i];
+      return rv;
+    }
+
+    // simple overlap without check
     template <class Y>
     Range overlap(const Range<Y>& r) const {
       assert(r_array.size() == r.r_array.size());
@@ -255,6 +340,71 @@ namespace CppRange {
       return rv;
     }
 
+    // simple reduce without check
+    template <class Y>
+    Range reduce(const Range<Y>& r) const {
+      assert(r_array.size() == r.r_array.size());
+      Range rv(compressed);
+      rv.r_array.reserve(r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(r_array[i] != r.r_array[i])
+          rv.r_array[i] = r_array[i] - r.r_array[i];
+        else
+          rv.r_array[i] = r_array[i];
+      }
+
+      // if same, means this and r are equal, the reduced one is none
+      if(rv == *this) 
+        return Range();
+      else 
+        return rv;
+    }
+
+    // weak order
+    template <class Y>
+    bool less(const range<Y>& r) const {
+      assert(r_array.size() == r.r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(r_array[i] != r.r_array[i])
+          return r_array[i].less(r.r_array[i]);
+      }
+      return false;
+    }
+
+    // check whether the ranges can be compared
+    // indicating they have the same number of dimensions
+    template <class Y>
+    bool is_comparable(const Range<Y>& r) const {
+      return r_array.size() == r.r_array.size();
+    }
+    
+    // check whether the range and this range satify the operable condition:
+    // only one dimension is not equal
+    template <class Y>
+    bool is_operable(const Range<Y>& r) const {
+      if(r_array.size() != r.r_array.size()) return false;
+      unsigned int cnt = 0;     // counting the different dimensions
+      for(unsigned int i=0; i<r_array.size(); i++)
+        if(r_array[i] != r.r_array[i]) cnt++;
+      if(cnt > 1) return false;
+      else return true;
+    }
+
+    // check whether the range and this range are adjacent
+    template <class Y>
+    bool is_adjacent(const Range<Y>& r) const {
+      if(!is_operable(r)) return false;
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(r_array[i] != r.r_array[i]) {
+          if(r_array[i].is_adjacent(r.r_array[i]))
+            return true;
+          else
+            return false;
+        }
+      }
+      
+      return true;
+    }    
 
     // implicit convert from Range to bool
     bool operator bool() const {return !r_array.empty() && is_valid();} 
@@ -262,6 +412,7 @@ namespace CppRange {
   private:
     bool compressed;                       // whether to compress single bit range when streamout
     std::vector<RangeElement<T> > r_array; // the range array
+
   };
 
   /////////////////////////////////////////////
@@ -270,47 +421,106 @@ namespace CppRange {
   // rhs range is enclosed in lhs (not equal)
   template <class T, class Y>
   bool operator> (const Range<T>& lhs, const Range<Y>& rhs) {
-    return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
+    if(lhs.is_comparable(rhs))
+      return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
+    else 
+      return false;
   }
 
   // rhs range is enclosed in lhs
   template <class T, class Y>
   bool operator>= (const Range<T>& lhs, const Range<Y>& rhs) {
-    return lhs.is_enclosed(rhs);
+    if(lhs.is_comparable(rhs))
+      return lhs.is_enclosed(rhs);
+    else 
+      return false;
   }
 
   // lhs range is enclosed in rhs (not equal)
   template <class T, class Y>
   bool operator< (const Range<T>& lhs, const Range<Y>& rhs) {
-    return rhs.is_enclosed(lhs) && !rhs.is_same(lhs);
+    if(lhs.is_comparable(rhs)) 
+      return rhs.is_enclosed(lhs) && !rhs.is_same(lhs);
+    else 
+      return false;
   }
 
   // lhs range is enclosed in rhs
   template <class T, class Y>
   inline bool operator<= (const Range<T>& lhs, const Range<Y>& rhs) {
-    return rhs.is_enclosed(lhs);
+    if(lhs.is_comparable(rhs)) 
+      return rhs.is_enclosed(lhs);
+    else 
+      return false;
   }
   
   // two ranges are equal
   template <class T, class Y>  
   inline bool operator== (const Range& lhs, const Range& rhs) {
-    return rhs.is_same(lhs);
+    if(lhs.is_comparable(rhs)) 
+      return rhs.is_same(lhs);
+    else 
+      return false;
+  }
+
+  // two ranges are not equal
+  template <class T, class Y>  
+  inline bool operator!= (const Range& lhs, const Range& rhs) {
+    return !(rhs == lhs);
   }
 
   // return the overlapped range
   template <class T, class Y>  
-  Range operator& (const Range<T>& lhs, const Range<Y>& rhs) {
-    return lhs.overlap(rhs);
+  Range<T> operator& (const Range<T>& lhs, const Range<Y>& rhs) {
+    if(lhs.is_operable(rhs)) 
+      return lhs.overlap(rhs);
+    else 
+      return Range<T>();
   }
 
-  // return the combined range (in first), if not combination, return them in descending ordered
-  std::pair<Range, Range> operator| (const Range& lhs, const Range& rhs);
+  // return the combined range
+  template <class T, class Y>
+  Range<T> operator| (const Range<T>& lhs, const Range<Y>& rhs) {
+    if(lhs.is_adjacent(rhs))
+      return lhs.combine(rhs);
+    else
+      return Range<T>();
+  }
+
+  // return the reduced range
+  template <class T, class Y>
+  Range<T> operator- (const Range<T>& lhs, const Range<Y>& rhs) {
+    if(lhs.is_comparable(rhs))
+      return lhs.reduce(rhs);
+    else
+      return Range<T>();
+  }
 
   // return the standard division (high, overlapped, low)
-  boost::tuple<Range, Range, Range> operator^ (const Range& lhs, const Range& rhs);
-
-  // helper function to handle the range of signals
-  std::pair<std::string, Range> divide_signal_name(const std::string&);
+  template <class T, class Y>
+  boost::tuple<Range<T>, Range<T>, Range<T> > 
+  operator^ (const Range<T>& lhs, const Range<Y>& rhs) {
+    boost::tuple<Range<T>, Range<T>, Range<T> > rv;
+    if(lhs.is_operable(rhs)) {
+      rv.get<1>() = lhs & rhs;
+      if(lhs.less(rhs)) {
+        rv.get<0>() = rhs - rv.get<1>();
+        rv.get<2>() = lhs - rv.get<1>();
+      } else {
+        rv.get<0>() = lhs - rv.get<1>();
+        rv.get<2>() = rhs - rv.get<1>();
+      }
+    } else if(lhs.is_comparable(rhs)) {
+      if(lhs.less(rhs)) {
+        rv.get<0>() = rhs;
+        rv.get<2>() = lhs;
+      } else {
+        rv.get<0>() = lhs;
+        rv.get<2>() = rhs;
+      }
+    }
+    return rv;
+  }
 
 }
 

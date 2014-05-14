@@ -32,6 +32,7 @@
 #include <utility>
 #include <string>
 #include <algorithm>
+#include <ostream>
 #include <boost/tuple/tuple.hpp>
 
 namespace CppRange {
@@ -55,8 +56,9 @@ namespace CppRange {
       : compressed(compress), r_pair(r, r) {}
 
     // bit range
-    RangeElement(const T& rh, const T& rl, bool compress = true)
-      : compressed(compress), r_pair(std::max(rh, rl), std::min(rh, rl)) {}
+    template<class Y>
+    RangeElement(const T& rh, const Y& rl, bool compress = true)
+      : compressed(compress), r_pair(rh, rl) {}
 
     // type conversion
     template <class Y>
@@ -153,6 +155,19 @@ namespace CppRange {
                             compressed);
     }
 
+    // stream out function
+    std::ostream& streamout(std::ostream& os) const{
+      os << "[";
+      if(is_valid()) {
+        if(compressed && r_pair.first == r_pair.second)
+          os << r_pair.first;
+        else 
+          os << r_pair.first << ":" << r_pair.second;
+      }
+      os << "]";
+      return os;
+    }
+
   private:
     bool compressed;            // whether to compress single bit range when streamout
     std::pair<T, T> r_pair;     // specific range expression
@@ -216,6 +231,12 @@ namespace CppRange {
   template <class T, class Y>  
   RangeElement<T> operator- (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
     return lhs.reduce(rhs);
+  }
+
+  // standard out stream
+  template<class T>
+  std::ostream& operator<< (std::ostream& os, const RangeElement<T>& r) {
+    return r.streamout(os);
   }
 
 
@@ -398,6 +419,17 @@ namespace CppRange {
       return true;
     }    
 
+    // stream out function
+    std::ostream& streamout(std::ostream& os) const{
+      if(is_valid()) {
+        for(unsigned int i=0; i<r_array.size(); i++)
+          os << r_array[i];
+      } else {
+        os << "[]";
+      }
+      return os;
+    }
+
   private:
     bool compressed;                       // whether to compress single bit range when streamout
     std::vector<RangeElement<T> > r_array; // the range array
@@ -509,6 +541,12 @@ namespace CppRange {
       }
     }
     return rv;
+  }
+
+  // standard out stream
+  template<class T>
+  std::ostream& operator<< (std::ostream& os, const Range<T>& r) {
+    return r.streamout(os);
   }
 
 }

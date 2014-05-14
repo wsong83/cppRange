@@ -31,7 +31,7 @@
 #include <vector>
 #include <utility>
 #include <string>
-#include <alogorithm>
+#include <algorithm>
 #include <boost/tuple/tuple.hpp>
 
 namespace CppRange {
@@ -52,7 +52,7 @@ namespace CppRange {
 
     // single bit range
     RangeElement(const T& r, bool compress = true)
-      : compressed(compress), r_pair(T) {}
+      : compressed(compress), r_pair(r, r) {}
 
     // bit range
     RangeElement(const T& rh, const T& rl, bool compress = true)
@@ -80,7 +80,7 @@ namespace CppRange {
     }
 
     // check whether range r is enclosed in this range 
-    template <calss Y>
+    template <class Y>
     bool is_enclosed(const RangeElement<Y>& r) const {
         return (
                 !(r_pair.first < r.r_pair.first) && 
@@ -89,7 +89,7 @@ namespace CppRange {
     }
 
     // check whether range r is equal with this range
-    template <calss Y>
+    template <class Y>
     bool is_same(const RangeElement<Y>& r) const {
       return (
               r_pair.first == r.r_pair.first &&
@@ -97,6 +97,12 @@ namespace CppRange {
               );
     }
 
+    // check whether r is adjacent to this range
+    template <class Y>
+    bool is_adjacent(const RangeElement<Y>& r) const {
+      return (!(r_pair.first + 1 < r.r_pair.second) && !(r.r_pair.first + 1 < r_pair.second));
+    }
+      
     // weak order
     template <class Y>
     bool less(const RangeElement<Y>& r) const {
@@ -128,7 +134,7 @@ namespace CppRange {
 
     // simple overlap without check
     template <class Y>
-    RangeElement combine(const RangeElement<Y>& r) const {
+    RangeElement overlap(const RangeElement<Y>& r) const {
       return RangeElement(std::min(r_pair.first, r.r_pair.first),
                           std::max(r_pair.second, r.r_pair.second),
                           compressed);
@@ -146,9 +152,6 @@ namespace CppRange {
                             std::max(r_pair.second, r.r_pair.first + 1),
                             compressed);
     }
-
-    // implicit convert from Range to bool
-    bool operator bool() const {return is_valid();}
 
   private:
     bool compressed;            // whether to compress single bit range when streamout
@@ -197,21 +200,21 @@ namespace CppRange {
   // return the overlapped range
   // function does not check the result's validation
   template <class T, class Y>  
-  Range operator& (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  RangeElement<T> operator& (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
     return lhs.overlap(rhs);
   }
 
   // return the combined range
   // function does not check the result's validation
   template <class T, class Y>  
-  Range operator| (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  RangeElement<T> operator| (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
     return lhs.combine(rhs);
   }
 
   // return the reduced range
   // function does not check the result's validation
   template <class T, class Y>  
-  Range operator- (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  RangeElement<T> operator- (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
     return lhs.reduce(rhs);
   }
 
@@ -262,7 +265,7 @@ namespace CppRange {
     T size_bit() const {
       T rv(1);
       for(unsigned int i=0; i<r_array.size(); i++)
-        T = T * r_array[i].size();
+        rv = rv * r_array[i].size();
       return rv;
     }
 
@@ -283,6 +286,7 @@ namespace CppRange {
 
     // check whether the range expression is valid
     bool is_valid() const {
+      if(r_array.empty()) return false;
       for(unsigned int i=0; i<r_array.size(); i++)
         if(!r_array[i].is_valid()) return false;
       return true;
@@ -305,18 +309,6 @@ namespace CppRange {
         if(r_array[i] != r.r_array[i]) return false;
       return true;
     }
-
-    // check whether r is adjacent to this range
-    template <class Y>
-    bool is_adjacent(const Range<Y>& r) const {
-      if(!is_operable(r)) return false;
-      for(unsigned int i=0; i<r_array.size(); i++)
-        if(r_array[i].first + 1 >= r.r_array[i].second ||
-           r_r_array[i].first + 1 >= r_array[i].second)
-          return true;
-      return rv;
-    }
-      
 
     // simple combine without check
     template <class Y>
@@ -362,7 +354,7 @@ namespace CppRange {
 
     // weak order
     template <class Y>
-    bool less(const range<Y>& r) const {
+    bool less(const Range<Y>& r) const {
       assert(r_array.size() == r.r_array.size());
       for(unsigned int i=0; i<r_array.size(); i++) {
         if(r_array[i] != r.r_array[i])
@@ -405,9 +397,6 @@ namespace CppRange {
       
       return true;
     }    
-
-    // implicit convert from Range to bool
-    bool operator bool() const {return !r_array.empty() && is_valid();} 
 
   private:
     bool compressed;                       // whether to compress single bit range when streamout
@@ -456,7 +445,7 @@ namespace CppRange {
   
   // two ranges are equal
   template <class T, class Y>  
-  inline bool operator== (const Range& lhs, const Range& rhs) {
+  bool operator== (const Range<T>& lhs, const Range<Y>& rhs) {
     if(lhs.is_comparable(rhs)) 
       return rhs.is_same(lhs);
     else 
@@ -465,7 +454,7 @@ namespace CppRange {
 
   // two ranges are not equal
   template <class T, class Y>  
-  inline bool operator!= (const Range& lhs, const Range& rhs) {
+  bool operator!= (const Range<T>& lhs, const Range<Y>& rhs) {
     return !(rhs == lhs);
   }
 
@@ -502,21 +491,21 @@ namespace CppRange {
   operator^ (const Range<T>& lhs, const Range<Y>& rhs) {
     boost::tuple<Range<T>, Range<T>, Range<T> > rv;
     if(lhs.is_operable(rhs)) {
-      rv.get<1>() = lhs & rhs;
+      boost::get<1>(rv) = lhs & rhs;
       if(lhs.less(rhs)) {
-        rv.get<0>() = rhs - rv.get<1>();
-        rv.get<2>() = lhs - rv.get<1>();
+        boost::get<0>(rv) = rhs - boost::get<1>(rv);
+        boost::get<2>(rv) = lhs - boost::get<1>(rv);
       } else {
-        rv.get<0>() = lhs - rv.get<1>();
-        rv.get<2>() = rhs - rv.get<1>();
+        boost::get<0>(rv) = lhs - boost::get<1>(rv);
+        boost::get<2>(rv) = rhs - boost::get<1>(rv);
       }
     } else if(lhs.is_comparable(rhs)) {
       if(lhs.less(rhs)) {
-        rv.get<0>() = rhs;
-        rv.get<2>() = lhs;
+        boost::get<0>(rv) = rhs;
+        boost::get<2>(rv) = lhs;
       } else {
-        rv.get<0>() = lhs;
-        rv.get<2>() = rhs;
+        boost::get<0>(rv) = lhs;
+        boost::get<2>(rv) = rhs;
       }
     }
     return rv;

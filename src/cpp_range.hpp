@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <ostream>
 #include <boost/tuple/tuple.hpp>
+#include <boost/foreach.hpp>
 
 namespace CppRange {
 
@@ -269,6 +270,42 @@ namespace CppRange {
       r_array.resize(r.r_array.size());
       for(unsigned int i=0; i<r_array.size(); i++)
         r_array[i] = r.r_array[i];
+    }
+
+    // construct from a list of RangeElements
+    template <class Y>
+    Range(const std::list<RangeElement<Y> >& l, bool compress = true) 
+      : compressed(compress) {
+      r_array.resize(l.size());
+      unsigned int i = 0;
+      BOOST_FOREACH(const RangeElement<Y>& r, l)
+	r_array[i++]=r;
+    }
+    // construct from a list of RangeElements
+    template <class Y>
+    Range(const std::vector<RangeElement<Y> >& l, bool compress = true)
+      : compressed(compress), r_array(l) {}
+
+    // construct from a list of value pairs
+    template <class Y>
+    Range(const std::list<std::pair<Y,Y> >& l, bool compress = true) 
+      : compressed(compress) {
+      r_array.resize(l.size());
+      unsigned int i = 0;
+      typedef std::pair<Y,Y> local_range_pair;
+      BOOST_FOREACH(const local_range_pair& r, l)
+	r_array[i++]=RangeElement<T>(r.first, r.second, compress);
+    }
+
+    // construct from a list of RangeElements
+    template <class Y>
+    Range(const std::vector<std::pair<Y,Y> >& l, bool compress = true)
+      : compressed(compress) {
+       r_array.resize(l.size());
+      unsigned int i = 0;
+      typedef std::pair<Y,Y> local_range_pair;
+      BOOST_FOREACH(const local_range_pair& r, l)
+	r_array[i++]=RangeElement<T>(r.first, r.second, compress);   
     }
 
     //////////////////////////////////////////////

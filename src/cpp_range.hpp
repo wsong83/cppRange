@@ -35,6 +35,7 @@
 #include <ostream>
 #include <boost/tuple/tuple.hpp>
 #include <boost/foreach.hpp>
+#include <assert.h>
 
 namespace CppRange {
 
@@ -48,9 +49,23 @@ namespace CppRange {
 
   template <class T>
   class RangeElement {
+  private:
+    bool compressed;            // whether to compress single bit range when streamout
+    std::pair<T, T> r_pair;     // specific range expression
   public:
     //////////////////////////////////////////////
+    // data accessers
+    T& first() { return r_pair.first;}
+    const T& first() const { return r_pair.first;}
+    T& second() { return r_pair.second;}
+    const T& second() const { return r_pair.second;}
+
+    //////////////////////////////////////////////
     // constructors
+
+    // default to construct an range with undefined value
+    RangeElement()
+      : compressed(false) {}
 
     // single bit range
     RangeElement(const T& r, bool compress = true)
@@ -68,6 +83,12 @@ namespace CppRange {
 
     //////////////////////////////////////////////
     // Helpers
+    RangeElement& operator= (const RangeElement& r) {
+      compressed = r.compressed;
+      r_pair.first = r.r_pair.first;
+      r_pair.second = r.r_pair.second;
+      return *this;
+    }
 
     // set compressed
     void set_compress(bool b) { compressed = b; }
@@ -169,9 +190,6 @@ namespace CppRange {
       return os;
     }
 
-  private:
-    bool compressed;            // whether to compress single bit range when streamout
-    std::pair<T, T> r_pair;     // specific range expression
   };
 
   /////////////////////////////////////////////
@@ -253,6 +271,10 @@ namespace CppRange {
 
   template <class T>
   class Range {
+  private:
+    bool compressed;                       // whether to compress single bit range when streamout
+    std::vector<RangeElement<T> > r_array; // the range array
+
   public:
     //////////////////////////////////////////////
     // constructors
@@ -309,6 +331,16 @@ namespace CppRange {
     }
 
     //////////////////////////////////////////////
+    // accesser
+    RangeElement<T>& operator[] (unsigned int index) {
+      return r_array.at(index);
+    }
+
+    const RangeElement<T>& operator[] (unsigned int index) const {
+      return r_array.at(index);
+    }
+
+    //////////////////////////////////////////////
     // Helpers
 
     // set compressed
@@ -340,6 +372,10 @@ namespace CppRange {
     void push_back(const RangeElement<Y>& r) {
       r_array.push_back(r);
       r_array[r_array.size()-1].set_compress(compressed);
+    }
+
+    void pop_back() {
+      r_array.pop_back();
     }
 
     // check whether the range expression is valid
@@ -466,10 +502,6 @@ namespace CppRange {
       }
       return os;
     }
-
-  private:
-    bool compressed;                       // whether to compress single bit range when streamout
-    std::vector<RangeElement<T> > r_array; // the range array
 
   };
 

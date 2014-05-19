@@ -36,6 +36,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/foreach.hpp>
 #include <assert.h>
+#include <iostream>
 
 namespace CppRange {
 
@@ -167,14 +168,26 @@ namespace CppRange {
     // simple reduce without check
     template <class Y>
     RangeElement reduce(const RangeElement<Y>& r) const {
-      if(less(r))
-        return RangeElement(std::min(r_pair.first, r.r_pair.second - 1),
-                            r_pair.second,
-                            compressed);
-      else
-        return RangeElement(r_pair.first,
-                            std::max(r_pair.second, r.r_pair.first + 1),
-                            compressed);
+      RangeElement rv(*this);
+      if(!(r.r_pair.second > r_pair.first) && (r_pair.second < r.r_pair.second))
+        rv.r_pair.first = r.r_pair.second - 1;
+      if(!(r.r_pair.first < r_pair.second) && (r_pair.first > r.r_pair.first))
+        rv.r_pair.second = r.r_pair.first + 1;
+       return rv;
+    }
+
+    // normalize divide
+    template <class Y>
+    boost::tuple<RangeElement, RangeElement, RangeElement> 
+    divideBy(const RangeElement<Y>& r) const {
+      RangeElement RAnd = overlap(r);
+      RangeElement ROr = combine(r);
+      RangeElement RMinus = ROr - RAnd;
+      boost::tuple<RangeElement, RangeElement, RangeElement> rv;
+      boost::get<0>(rv) = RangeElement(ROr.first(), RMinus.second(), compressed);
+      boost::get<1>(rv) = RAnd;
+      boost::get<2>(rv) = RangeElement(RMinus.first(), ROr.second(), compressed);
+      return rv;
     }
 
     // stream out function
@@ -250,6 +263,13 @@ namespace CppRange {
   template <class T, class Y>  
   RangeElement<T> operator- (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
     return lhs.reduce(rhs);
+  }
+
+  // return the standard division (high, overlapped, low)
+  template <class T, class Y>
+  boost::tuple<RangeElement<T>, RangeElement<T>, RangeElement<T> > 
+  operator^ (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+    return lhs.divideBy(rhs);
   }
 
   // standard out stream
@@ -381,7 +401,7 @@ namespace CppRange {
     // check whether the range expression is valid
     bool is_valid() const {
       if(r_array.empty()) return false;
-      for(unsigned int i=0; i<r_array.size(); i++)
+      for(unsigned int i=0; i<r_array.size(); i++) 
         if(!r_array[i].is_valid()) return false;
       return true;
     }
@@ -409,7 +429,7 @@ namespace CppRange {
     Range combine(const Range<Y>& r) const {
       assert(r_array.size() == r.r_array.size());
       Range rv(compressed);
-      rv.r_array.reserve(r_array.size());
+      rv.r_array.resize(r_array.size());
       for(unsigned int i=0; i<r_array.size(); i++)
         rv.r_array[i] = r_array[i] | r.r_array[i];
       return rv;
@@ -420,8 +440,8 @@ namespace CppRange {
     Range overlap(const Range<Y>& r) const {
       assert(r_array.size() == r.r_array.size());
       Range rv(compressed);
-      rv.r_array.reserve(r_array.size());
-      for(unsigned int i=0; i<r_array.size(); i++)
+      rv.r_array.resize(r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++) 
         rv.r_array[i] = r_array[i] & r.r_array[i];
       return rv;
     }
@@ -431,7 +451,7 @@ namespace CppRange {
     Range reduce(const Range<Y>& r) const {
       assert(r_array.size() == r.r_array.size());
       Range rv(compressed);
-      rv.r_array.reserve(r_array.size());
+      rv.r_array.resize(r_array.size());
       for(unsigned int i=0; i<r_array.size(); i++) {
         if(r_array[i] != r.r_array[i])
           rv.r_array[i] = r_array[i] - r.r_array[i];
@@ -444,6 +464,27 @@ namespace CppRange {
         return Range();
       else 
         return rv;
+    }
+
+    // normalize divide
+    template <class Y>
+    boost::tuple<Range, Range, Range> 
+    divideBy(const Range<Y>& r) const {
+      Range rH(compressed), rM(compressed), rL(compressed);
+      rH.r_array.resize(r_array.size());
+      rM.r_array.resize(r_array.size());
+      rL.r_array.resize(r_array.size());
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(r_array[i] != r.r_array[i])
+          boost::tie(rH.r_array[i], rM.r_array[i], rL.r_array[i]) = 
+            r_array[i].divideBy(r.r_array[i]);
+        else {
+          rH.r_array[i] = r_array[i];
+          rM.r_array[i] = r_array[i];
+          rL.r_array[i] = r_array[i];
+        }
+      }
+      return boost::tuple<Range, Range, Range>(rH, rM, rL);
     }
 
     // weak order
@@ -562,7 +603,7 @@ namespace CppRange {
   // return the overlapped range
   template <class T, class Y>  
   Range<T> operator& (const Range<T>& lhs, const Range<Y>& rhs) {
-    if(lhs.is_operable(rhs)) 
+    if(lhs.is_comparable(rhs)) 
       return lhs.overlap(rhs);
     else 
       return Range<T>();
@@ -580,7 +621,7 @@ namespace CppRange {
   // return the reduced range
   template <class T, class Y>
   Range<T> operator- (const Range<T>& lhs, const Range<Y>& rhs) {
-    if(lhs.is_comparable(rhs))
+    if(lhs.is_operable(rhs))
       return lhs.reduce(rhs);
     else
       return Range<T>();
@@ -590,26 +631,10 @@ namespace CppRange {
   template <class T, class Y>
   boost::tuple<Range<T>, Range<T>, Range<T> > 
   operator^ (const Range<T>& lhs, const Range<Y>& rhs) {
-    boost::tuple<Range<T>, Range<T>, Range<T> > rv;
-    if(lhs.is_operable(rhs)) {
-      boost::get<1>(rv) = lhs & rhs;
-      if(lhs.less(rhs)) {
-        boost::get<0>(rv) = rhs - boost::get<1>(rv);
-        boost::get<2>(rv) = lhs - boost::get<1>(rv);
-      } else {
-        boost::get<0>(rv) = lhs - boost::get<1>(rv);
-        boost::get<2>(rv) = rhs - boost::get<1>(rv);
-      }
-    } else if(lhs.is_comparable(rhs)) {
-      if(lhs.less(rhs)) {
-        boost::get<0>(rv) = rhs;
-        boost::get<2>(rv) = lhs;
-      } else {
-        boost::get<0>(rv) = lhs;
-        boost::get<2>(rv) = rhs;
-      }
-    }
-    return rv;
+    if(lhs.is_adjacent(rhs))
+      return lhs.divideBy(rhs);
+    else
+      return boost::tuple<Range<T>, Range<T>, Range<T> >();
   }
 
   // standard out stream

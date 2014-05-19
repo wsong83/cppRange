@@ -86,6 +86,36 @@ int main() {
   cout << "[4:0][3:0][5:5] > [4:4][2:0] (should be 0): ";
   mRB.pop_back();
   cout << (mRA > mRB) << endl;
+
+  cout << "[4:0][3:0][5:5] & [7:3][2:0][6:5] (should be [4:3][2:0][5:5]): ";
+  mRB[0] = RangeElement<int>(7,3);
+  mRB.push_back(RangeElement<int>(6,5));
+  cout << (mRA & mRB) << endl;
   
+  cout << "[4:0][3:0][5:5] | [7:3][2:0][6:5] (should be []): ";
+  cout << (mRA | mRB) << endl;
+
+  cout << "[4:0][3:0][5:5] | [7:3][3:0][5:5] (should be [7:0][3:0][5:5]): ";
+  mRB[1].first() = 3;
+  mRB[2].first() = 5;
+  cout << (mRA | mRB) << endl;
+
+  cout << "[4:0][3:0][5:5] - [7:3][3:0][5:5] (should be [2:0][3:0][5:5]): ";
+  cout << (mRA - mRB) << endl;
+
+  cout << "[4:0][3:0][5:5] | [7:6][3:0][5:5] (should be []): ";
+  mRB[0] = RangeElement<int>(7,6);
+  cout << (mRA - mRB) << endl;  
+
+  cout << "[4:0][3:0][5:5] - [4:0][1:1][5:5] (should be []): ";
+  mRB[0] = RangeElement<int>(4,0);
+  mRB[1] = RangeElement<int>(1,1);
+  cout << (mRA - mRB) << endl;  
+
+  cout << "[4:0][3:0][5:5] ^ [4:0][1:1][5:5] (should be [4:0][3:2][5:5]; [4:0][1:1][5:5]; [4:0][0:0][5:5]): ";
+  Range<int> oH, oM, oL;
+  boost::tie(oH, oM, oL) = mRA ^ mRB;
+  std::cout << oH << "; " << oM << "; " << oL << endl;
+
   return 0;
 }

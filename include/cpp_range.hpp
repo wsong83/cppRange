@@ -36,6 +36,7 @@
 
 // Complex multi-dimensional Range
 // Allow arbitrary different dimensions
+#include "cpp_range_map_base.hpp"
 #include "cpp_range_map.hpp"
 
 #endif

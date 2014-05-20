@@ -28,6 +28,10 @@
 #ifndef _CPP_RANGE_MAP_H_
 #define _CPP_RANGE_MAP_H_
 
+namespace CppRange {
+
+
+}
 
 
 #endif

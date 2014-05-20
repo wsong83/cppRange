@@ -31,6 +31,7 @@
 #include <utility>
 #include <ostream>
 #include <algorithm>
+#include <boost/tuple/tuple.hpp>
 
 namespace CppRange {
 
@@ -84,7 +85,7 @@ namespace CppRange {
     void set_compress(bool b) { compressed = b; }
 
     // size of bit
-    T size() const {
+    T size_bit() const {
       if(is_valid())
         return r_pair.first - r_pair.second + 1;
       else

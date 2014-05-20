@@ -39,7 +39,7 @@ namespace CppRange {
   //
   //////////////////////////////////////////////////
   template <class T>
-  class RangeMapBase : public RangeElement {
+  class RangeMapBase : public RangeElement<T> {
   private:
     std::list<RangeMapBase> child;    // sub-dimensions
   public:
@@ -60,7 +60,7 @@ namespace CppRange {
       : RangeElement<T>(rh, rl, compress) {}
 
     // type conversion
-    RangeMapBase(const RangeElement& r)
+    RangeMapBase(const RangeElement<T>& r)
       : RangeElement<T>(r) {}
 
     // copy
@@ -95,7 +95,10 @@ namespace CppRange {
     
     // check whether range r is enclosed in this range 
     virtual bool is_enclosed(const RangeMapBase& r) const {
-      return is_same(combine(r)); // if A|B == A, then A >= B
+      if(RangeElement<T>::is_enclosed(r)) {
+        return is_enclosed(child, r.child);
+      } else
+        return false;
     }
     
 
@@ -187,8 +190,8 @@ namespace CppRange {
       return rv;
     }
 
-    // simple overlap without check
-    virtual RangeElement overlap(const RangeMapBase& r) const {
+    // overlap two ranges
+    virtual RangeMapBase overlap(const RangeMapBase& r) const {
       RangeMapBase rv(RangeElement<T>::combine(r));
       if(rv.is_valid() && child.size()) {       
         // {A|B} & {C|D} == {A&C | A&D | B&C | B&D}
@@ -206,10 +209,6 @@ namespace CppRange {
       return rv;
     }
     
-    
-    
-
-
   private:
     // Disable some derived member functions
 
@@ -217,16 +216,17 @@ namespace CppRange {
     virtual bool is_adjacent() const;
 
 
+  protected:
     //////////////////////////////////
-    // private helper functions
+    // protected helper functions
 
     // combine two child lists
     std::list<RangeMapBase> 
     combine (const std::list<RangeMapBase>& lhs_arg, 
              const std::list<RangeMapBase>& rhs_arg
              ) {
-      lhs = lhs_arg;
-      rhs = rhs_arg;
+      std::list<RangeMapBase> lhs = lhs_arg;
+      std::list<RangeMapBase> rhs = rhs_arg;
       std::list<RangeMapBase> rv;
       
       typename std::list<RangeMapBase<T> >::const_iterator lit, rit;
@@ -270,8 +270,85 @@ namespace CppRange {
 
       return rv;
     }
-    
 
+    // check whether a range list encloses another one
+    bool is_enclosed(const std::list<RangeMapBase>& lhs_arg, 
+                     const std::list<RangeMapBase>& rhs_arg
+                     ) {
+      
+      std::list<RangeMapBase> lhs = lhs_arg;
+      std::list<RangeMapBase> rhs = rhs_arg;
+
+      typename std::list<RangeMapBase<T> >::const_iterator lit, rit;
+      for(lit = lhs.begin(), rit = rhs.begin();
+          lit == lhs.end() || rit = rhs.end();
+          ) {
+        RangeElement<T> RAnd = lit->RangeElement<T>::overlap(*rit);
+        if(RAnd.is_valid()) {
+          RangeElement<T> rH, rM, rL;
+          boost::tie(rH, rM, rL) = RangeElement<T>::divideBy(r);
+          RangeMapBase rmH(rH), rmM(rM), rmL(rL);
+          
+        // check the higher part
+        if(rH.is_valid() && rit->RangeElement<T>::is_enclosed(rH)) // rit > rH
+          return false;
+        
+        // the overlapped part
+        if(!is_enclosed(lit->child, rit->child))
+          return false;
+
+        // check the lower part
+        if(rL.is_valid()) {
+          if(rit->RangeElement<T>::is_enclosed(rH)) // rit > rL
+            
+
+            /////////////////////
+            MAY BE the stanard combine should return a tuple<3>
+              //////////////////
+        
+
+
+
+
+
+
+
+
+  // using the standard combine function
+          rv.splice(rv.end(), lit->combine(*rit));
+          
+          // check result
+          if(lit->is_enclosed(rv.back()) && !rit->is_enclosed(rv.back())) {
+            // the lower range belongs to lit
+            ++rit;
+            *lit = rv.back();
+            rv.pop_back();
+          } else if(rit->is_enclosed(rv.back()) && !lit->is_enclosed(rv.back())) {
+            // the lower range belongs to rit
+            ++lit;
+            *rit = rv.back();
+            rv.pop_back();
+          } else {
+            // the lower range belongs to both ranges
+            ++rit;
+            ++lit;
+          }
+
+        } else {
+          if(lit->less(*rit))
+            return false;       // rit is not enclosed in lit
+          else
+            rv.push_back(*lit++);
+        }
+      }
+
+      if(rit != rhs.end())
+        return false;
+      else
+        return true;
+    }
+
+    void reduce(std::list<RangeMapBase>& rlist) {}
 
   };
     

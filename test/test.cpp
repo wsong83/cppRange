@@ -47,6 +47,9 @@ int main() {
   cout << "calculate [7:4] == [7:4] (should be 1): ";
   cout << (RangeElement<int>(7,4) == RangeElement<int>(7, 4)) << endl;
 
+  cout << "RangeMapBase: calculate [7:4] == [7:4] (should be 1): ";
+  cout << (RangeMapBase<int>(7,4).is_same(RangeMapBase<int>(7, 4))) << endl;
+
   cout << "calculate [7:4] | [3:-9] (should be [7:-9]): ";
   cout << (RangeElement<int>(7,4) | RangeElement<int>(3, -9)) << endl;
 

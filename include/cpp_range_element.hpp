@@ -69,13 +69,11 @@ namespace CppRange {
       : compressed(compress), invalid(false), r_pair(r, r) {}
 
     // bit range
-    template<class Y>
-    RangeElement(const T& rh, const Y& rl, bool compress = true)
+    RangeElement(const T& rh, const T& rl, bool compress = true)
       : compressed(compress), invalid(false), r_pair(rh, rl) {}
 
     // type conversion
-    template <class Y>
-    RangeElement(const RangeElement<Y>& r)
+    RangeElement(const RangeElement& r)
       : compressed(r.compressed), invalid(r.invalid), r_pair(r.r_pair) {}
 
     //////////////////////////////////////////////
@@ -98,8 +96,7 @@ namespace CppRange {
     }
 
     // check whether range r is enclosed in this range 
-    template <class Y>
-    bool is_enclosed(const RangeElement<Y>& r) const {
+    bool is_enclosed(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) return false;
       else
         return (
@@ -108,9 +105,8 @@ namespace CppRange {
                 );      
     }
 
-    // check whether range r is equal with this range
-    template <class Y>
-    bool is_same(const RangeElement<Y>& r) const {
+    // check whether range r is equal with this range 
+   bool is_same(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) return false;
       else
         return (
@@ -120,16 +116,14 @@ namespace CppRange {
     }
 
     // check whether r is adjacent to this range
-    template <class Y>
-    bool is_adjacent(const RangeElement<Y>& r) const {
+    virtual bool is_adjacent(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) return false;
       else
         return (!(r_pair.first + 1 < r.r_pair.second) && !(r.r_pair.first + 1 < r_pair.second));
     }
       
     // weak order
-    template <class Y>
-    bool less(const RangeElement<Y>& r) const {
+    bool less(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return false;
       else if(r_pair.first < r.r_pair.first)
@@ -145,8 +139,7 @@ namespace CppRange {
     }
 
     // check whether r has shared range with this range
-    template <class Y>
-    bool is_overlapped(const RangeElement<Y>& r) const {
+    bool is_overlapped(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return false;
       else 
@@ -154,8 +147,7 @@ namespace CppRange {
     }
 
     // simple combine without check
-    template <class Y>
-    RangeElement combine(const RangeElement<Y>& r) const {
+    RangeElement combine(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return RangeElement();
       else 
@@ -165,8 +157,7 @@ namespace CppRange {
     }
 
     // simple overlap without check
-    template <class Y>
-    RangeElement overlap(const RangeElement<Y>& r) const {
+    RangeElement overlap(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return RangeElement();
       else 
@@ -176,8 +167,7 @@ namespace CppRange {
     }
     
     // simple reduce without check
-    template <class Y>
-    RangeElement reduce(const RangeElement<Y>& r) const {
+    RangeElement reduce(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return RangeElement();
       
@@ -190,9 +180,8 @@ namespace CppRange {
     }
 
     // normalize divide
-    template <class Y>
     boost::tuple<RangeElement, RangeElement, RangeElement> 
-    divideBy(const RangeElement<Y>& r) const {
+    divideBy(const RangeElement& r) const {
       boost::tuple<RangeElement, RangeElement, RangeElement> rv;
       if(!is_valid() || !r.is_valid()) 
         return rv;
@@ -225,66 +214,66 @@ namespace CppRange {
   // overload operators
 
   // rhs range is enclosed in lhs (not equal)
-  template <class T, class Y>
-  bool operator> (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>
+  bool operator> (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
   }
 
   // rhs range is enclosed in lhs
-  template <class T, class Y>
-  bool operator>= (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>
+  bool operator>= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.is_enclosed(rhs);
   }
 
   // lhs range is enclosed in rhs (not equal)
-  template <class T, class Y>
-  bool operator< (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>
+  bool operator< (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return rhs.is_enclosed(lhs) && !rhs.is_same(lhs);
   }
 
   // lhs range is enclosed in rhs
-  template <class T, class Y>
-  bool operator<= (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>
+  bool operator<= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return rhs.is_enclosed(lhs);
   }
   
   // two ranges are equal
-  template <class T, class Y>
-  inline bool operator== (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>
+  inline bool operator== (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return rhs.is_same(lhs);
   }
 
   // two ranges are not equal
-  template <class T, class Y>
-  inline bool operator!= (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>
+  inline bool operator!= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return !rhs.is_same(lhs);
   }
 
   // return the overlapped range
   // function does not check the result's validation
-  template <class T, class Y>  
-  RangeElement<T> operator& (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>  
+  RangeElement<T> operator& (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.overlap(rhs);
   }
 
   // return the combined range
   // function does not check the result's validation
-  template <class T, class Y>  
-  RangeElement<T> operator| (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>  
+  RangeElement<T> operator| (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.combine(rhs);
   }
 
   // return the reduced range
   // function does not check the result's validation
-  template <class T, class Y>  
-  RangeElement<T> operator- (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  template <class T>  
+  RangeElement<T> operator- (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.reduce(rhs);
   }
 
   // return the standard division (high, overlapped, low)
-  template <class T, class Y>
+  template <class T>
   boost::tuple<RangeElement<T>, RangeElement<T>, RangeElement<T> > 
-  operator^ (const RangeElement<T>& lhs, const RangeElement<Y>& rhs) {
+  operator^ (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.divideBy(rhs);
   }
 

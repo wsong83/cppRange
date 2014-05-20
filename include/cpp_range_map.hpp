@@ -19,23 +19,15 @@
 
 /* 
  * An C++ STL static range calculation library
- * 09/05/2014   Wei Song
+ * Complex multi-dimensional Range
+ * 20/05/2014   Wei Song
  *
  *
  */
 
-#ifndef _CPP_RANGE_H_
-#define _CPP_RANGE_H_
+#ifndef _CPP_RANGE_MAP_H_
+#define _CPP_RANGE_MAP_H_
 
-// RangeElement
-#include "cpp_range_element.hpp"
 
-// Simple multi-dimensional Range
-// Does not allow operations when ranges have multiple different dimensions
-#include "cpp_range_multi.hpp"
-
-// Complex multi-dimensional Range
-// Allow arbitrary different dimensions
-#include "cpp_range_map.hpp"
 
 #endif

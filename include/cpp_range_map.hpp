@@ -30,6 +30,15 @@
 
 namespace CppRange {
 
+  //////////////////////////////////////////////////
+  // RangeElement
+  //
+  // a single dimension range expression
+  // the basic element of a multi-dimensional range
+  //
+  //////////////////////////////////////////////////
+
+
 
 }
 

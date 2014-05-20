@@ -80,10 +80,10 @@ namespace CppRange {
     // Helpers
 
     // set compressed
-    void set_compress(bool b) { compressed = b; }
+    virtual void set_compress(bool b) { compressed = b; }
 
     // size of bit
-    T size_bit() const {
+    virtual T size_bit() const {
       if(is_valid())
         return r_pair.first - r_pair.second + 1;
       else
@@ -91,12 +91,12 @@ namespace CppRange {
     } 
 
     // valid range expression
-    bool is_valid() const {
+    virtual bool is_valid() const {
       return !invalid && !(r_pair.first < r_pair.second);
     }
 
     // check whether range r is enclosed in this range 
-    bool is_enclosed(const RangeElement& r) const {
+    virtual bool is_enclosed(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) return false;
       else
         return (
@@ -106,7 +106,7 @@ namespace CppRange {
     }
 
     // check whether range r is equal with this range 
-   bool is_same(const RangeElement& r) const {
+   virtual bool is_same(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) return false;
       else
         return (
@@ -123,7 +123,7 @@ namespace CppRange {
     }
       
     // weak order
-    bool less(const RangeElement& r) const {
+    virtual bool less(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return false;
       else if(r_pair.first < r.r_pair.first)
@@ -139,7 +139,7 @@ namespace CppRange {
     }
 
     // check whether r has shared range with this range
-    bool is_overlapped(const RangeElement& r) const {
+    virtual bool is_overlapped(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return false;
       else 
@@ -147,7 +147,7 @@ namespace CppRange {
     }
 
     // simple combine without check
-    RangeElement combine(const RangeElement& r) const {
+    virtual RangeElement combine(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return RangeElement();
       else 
@@ -157,7 +157,7 @@ namespace CppRange {
     }
 
     // simple overlap without check
-    RangeElement overlap(const RangeElement& r) const {
+    virtual RangeElement overlap(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return RangeElement();
       else 
@@ -167,7 +167,7 @@ namespace CppRange {
     }
     
     // simple reduce without check
-    RangeElement reduce(const RangeElement& r) const {
+    virtual RangeElement reduce(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return RangeElement();
       
@@ -180,7 +180,7 @@ namespace CppRange {
     }
 
     // normalize divide
-    boost::tuple<RangeElement, RangeElement, RangeElement> 
+    virtual boost::tuple<RangeElement, RangeElement, RangeElement> 
     divideBy(const RangeElement& r) const {
       boost::tuple<RangeElement, RangeElement, RangeElement> rv;
       if(!is_valid() || !r.is_valid()) 
@@ -196,7 +196,7 @@ namespace CppRange {
     }
 
     // stream out function
-    std::ostream& streamout(std::ostream& os) const{
+    virtual std::ostream& streamout(std::ostream& os) const{
       os << "[";
       if(is_valid()) {
         if(compressed && r_pair.first == r_pair.second)

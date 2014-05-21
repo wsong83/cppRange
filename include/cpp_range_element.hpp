@@ -187,11 +187,21 @@ namespace CppRange {
         return rv;
 
       RangeElement RAnd = overlap(r);
-      RangeElement ROr = combine(r);
-      RangeElement RMinus = ROr - RAnd;
-      boost::get<0>(rv) = RangeElement(ROr.first(), RMinus.second(), compressed);
-      boost::get<1>(rv) = RAnd;
-      boost::get<2>(rv) = RangeElement(RMinus.first(), ROr.second(), compressed);
+      if(RAnd.is_valid()) {
+        RangeElement ROr = combine(r);
+        RangeElement RMinus = ROr - RAnd;
+        boost::get<0>(rv) = RangeElement(ROr.first(), RMinus.second(), compressed);
+        boost::get<1>(rv) = RAnd;
+        boost::get<2>(rv) = RangeElement(RMinus.first(), ROr.second(), compressed);
+      } else {
+        if(less(r)) {
+          boost::get<0>(rv) = RangeElement(r.first(), r.second(), compressed);
+          boost::get<2>(rv) = *this;
+        } else {
+          boost::get<2>(rv) = RangeElement(r.first(), r.second(), compressed);
+          boost::get<0>(rv) = *this;          
+        }
+      }
       return rv;
     }
 

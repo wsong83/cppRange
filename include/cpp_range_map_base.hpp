@@ -228,11 +228,24 @@ namespace CppRange {
       return rv;
     }
     
+    // reduce with another range
+    virtual RangeMapBase reduce(const RangeMapBase& r) const {
+      RangeMapBase RAnd = overlap(r);
+      if(!RAnd.is_valid()) return RangeMapBase();
+
+      // actually it is easy to do A - A&B rather than A - B directly
+
+    }
+
   private:
     // Disable some derived member functions
 
     // is_adjacent() is too difficult and with no explicit usage in RangeMap
-    bool is_adjacent() const;
+    void is_adjacent();
+    
+    // divideBy() is no longer useful because the combine() is now capable of handling
+    // complex ranges
+    void divideBy();
 
 
   protected:

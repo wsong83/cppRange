@@ -28,16 +28,97 @@
 #ifndef _CPP_RANGE_MAP_H_
 #define _CPP_RANGE_MAP_H_
 
+#include <list>
+#include <boost/foreach.hpp>
+
+#include "cpp_range_map_base.hpp"
+
 namespace CppRange {
 
   //////////////////////////////////////////////////
-  // RangeElement
+  // RangeMap
   //
-  // a single dimension range expression
-  // the basic element of a multi-dimensional range
+  // A multi-dimensional range support multi-dimensional calculations
   //
   //////////////////////////////////////////////////
+  template <class T>
+  class RangeMap {
+  private:
+    std::list<RangeMapBase<T> > child; // sub-dimensions
 
+  public:
+    
+    //////////////////////////////////////////////
+    // constructors
+    // default to construct an range with undefined value
+    RangeMap() {}
+
+    // single bit range
+    RangeMap(const T& r, bool compress = true) {
+      child.push_back(RangeMapBase<T>(r, compress));
+    }
+
+    // bit range
+    RangeMap(const T& rh, const T& rl, bool compress = true) {
+      child.push_back(RangeMapBase<T>(rh, rl, compress));
+    }
+
+    // type conversion
+    RangeMap(const RangeMapBase<T>& r) {
+      child.push_back(r);
+    }
+
+    // type conversion
+    RangeMap(const RangeElement<T>& r) {
+      child.push_back(RangeMapBase<T>(r));
+    }
+
+    // combined build
+    RangeMap(const std::list<RangeMapBase<T> >& rlist)
+      : child(rlist) {}
+
+    // combined build
+    RangeMap(const std::list<RangeElement<T> >& rlist) {
+      BOOST_FOREACH(const RangeElement<T>& r, rlist)
+        child.push_back(RangeMapBase<T>(r));
+    }
+
+    // copy
+    RangeMap(const RangeMap& r)
+      : child(r.child) {}
+    
+    // assign
+    RangeMap& operator= (const RangeElement<T>& r) {
+      this->push_back(RangeMapBase<T>(r));
+    }
+   
+    // assign
+    RangeMap& operator= (const RangeMapBase<T>& r) {
+      this->push_back(r);
+    }
+
+    //////////////////////////////////////////////
+    // Helpers
+
+    virtual void set_compress(bool compress) {
+      BOOST_FOREACH(RangeMapBase<T>& b, child)
+        b.set_compress(compress);
+    }
+    
+    // valid range expression
+    virtual bool is_valid() const {
+      BOOST_FOREACH(const RangeMapBase<T>& b, child)
+        if(!b.is_valid()) return false;
+      return true;
+    }
+
+    // check whether range r is enclosed in this range
+    virtual bool is_enclosed(const RangeMap& r) const {
+      return RangeMapBase<T>::is_enclosed(child, r.child);
+    }
+
+
+  };
 
 
 }

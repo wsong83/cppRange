@@ -248,9 +248,8 @@ namespace CppRange {
     void divideBy();
 
 
-  protected:
     //////////////////////////////////
-    // protected helper functions
+    // static helper functions
 
     // combine two child lists
     static std::list<RangeMapBase> 
@@ -362,7 +361,7 @@ namespace CppRange {
         return true;
     }
 
-    void reduce(std::list<RangeMapBase>& rlist) {}
+    static void reduce(std::list<RangeMapBase>& rlist) {}
 
   };
     

@@ -117,6 +117,62 @@ namespace CppRange {
       return RangeMapBase<T>::is_enclosed(child, r.child);
     }
 
+    // check whether range r is equal with this range
+    virtual bool is_same(const RangeMap& r) const {
+      if(child.size() != r.child.size())
+        return false;
+
+      typename std::list<RangeMapBase<T> >::const_iterator it_loc, it_r;
+      for(it_loc = child.begin(), it_r = r.child.begin();
+          it_loc != child.end() && it_r != r.child.end();
+          ++it_loc, ++it_r)
+        if(it_loc->is_same(*it_r)) 
+          return false;
+      
+      return true;
+    }
+
+    // weak order
+    virtual bool less(const RangeMap& r) const {
+      typename std::list<RangeMapBase<T> >::const_iterator it_loc, it_r;
+      for(it_loc = child.begin(), it_r = r.child.begin();
+	  it_loc != child.end() && it_r != r.child.end();
+	  ++it_loc, ++it_r) {
+	if(!it_loc->is_same(*it_r)) // the first non-equal range
+	  return it_loc->less(*it_r);
+      }
+      if(it_loc != child.end()) // local hase larger range
+	return false;
+      else
+	return true;
+    }
+
+    // check whether r has shared range with this range
+    virtual bool is_overlapped(const RangeMap& r) const {
+      return overlap(r).is_valid(); // if A&B != []; then A and B are overlapped
+    }
+
+    // combine two ranges
+    virtual RangeMap combine(const RangeMap& r) const {
+      return RangeMap(RangeMapBase<T>::combine(child, r.child));
+    }
+
+    // overlap two ranges
+    virtual RangeMap overlap(const RangeMap& r) const {
+      RangeMap rv;
+      // {A|B} & {C|D} == {A&C | A&D | B&C | B&D}
+      // the resulted list is in order automatically
+      BOOST_FOREACH(const RangeMapBase<T>& cl, child) {
+	BOOST_FOREACH(const RangeMapBase<T>& cr, r.child) {
+	  RangeMapBase<T> result = cl & cr;
+	  if(result.is_valid())
+	    rv.child.push_back(result);
+	}
+      }
+      return rv;
+    }
+
+
 
   };
 

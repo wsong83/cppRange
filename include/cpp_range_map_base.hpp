@@ -215,9 +215,9 @@ namespace CppRange {
       if(rv.is_valid() && child.size()) {       
         // {A|B} & {C|D} == {A&C | A&D | B&C | B&D}
         // the resulted list is in order automatically
-        BOOST_FOREACH(const RangeElement<T>& cl, child) {
-          BOOST_FOREACH(const RangeElement<T>& cr, r.child) {
-            RangeElement<T> result = cl & cr;
+        BOOST_FOREACH(const RangeMapBase<T>& cl, child) {
+          BOOST_FOREACH(const RangeMapBase<T>& cr, r.child) {
+            RangeMapBase<T> result = cl & cr;
             if(result.is_valid())
               rv.child.push_back(result);
           }
@@ -229,12 +229,15 @@ namespace CppRange {
     }
     
     // reduce with another range
-    virtual RangeMapBase reduce(const RangeMapBase& r) const {
-      RangeMapBase RAnd = overlap(r);
-      if(!RAnd.is_valid()) return RangeMapBase();
-
-      // actually it is easy to do A - A&B rather than A - B directly
-
+    virtual boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
+    reduce(const RangeMapBase& r) const {
+      RangeElement<T> RAnd = RangeElement<T>::overlap(r);
+      boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> rv;
+      if(!RAnd.is_valid()) {
+	boost::get<1>(rv) = *this;
+      } else {
+	
+      }
     }
 
   private:
@@ -247,7 +250,7 @@ namespace CppRange {
     // complex ranges
     void divideBy();
 
-
+  public:
     //////////////////////////////////
     // static helper functions
 

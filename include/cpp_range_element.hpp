@@ -33,6 +33,8 @@
 #include <algorithm>
 #include <boost/tuple/tuple.hpp>
 
+#include "cpp_range_define.hpp"
+
 namespace CppRange {
 
   ////////////////////////////////////////////////// 
@@ -85,7 +87,7 @@ namespace CppRange {
     // size of bit
     virtual T size_bit() const {
       if(is_valid())
-        return r_pair.first - r_pair.second + 1;
+        return r_pair.first - r_pair.second + min_unit<T>();
       else
         return 0;
     } 
@@ -119,7 +121,7 @@ namespace CppRange {
     virtual bool is_adjacent(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) return false;
       else
-        return (!(r_pair.first + 1 < r.r_pair.second) && !(r.r_pair.first + 1 < r_pair.second));
+        return (!(r_pair.first + min_unit<T>() < r.r_pair.second) && !(r.r_pair.first + min_unit<T>() < r_pair.second));
     }
       
     // weak order
@@ -173,9 +175,9 @@ namespace CppRange {
       
       RangeElement rv(*this);
       if(!(r.r_pair.second > r_pair.first) && (r_pair.second < r.r_pair.second))
-        rv.r_pair.first = r.r_pair.second - 1;
+        rv.r_pair.first = r.r_pair.second - min_unit<T>();
       if(!(r.r_pair.first < r_pair.second) && (r_pair.first > r.r_pair.first))
-        rv.r_pair.second = r.r_pair.first + 1;
+        rv.r_pair.second = r.r_pair.first + min_unit<T>();
        return rv;
     }
 

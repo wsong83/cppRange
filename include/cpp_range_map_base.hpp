@@ -45,6 +45,7 @@ namespace CppRange {
   class RangeMapBase : public RangeElement<T> {
   private:
     std::list<RangeMapBase> child;    // sub-dimensions
+    unsigned int level;               // level of sub-ranges
   public:
 
     //////////////////////////////////////////////
@@ -52,27 +53,32 @@ namespace CppRange {
 
     // default to construct an range with undefined value
     RangeMapBase()
-      : RangeElement<T>() {}
+      : RangeElement<T>(), level(0) {}
 
     // single bit range
     RangeMapBase(const T& r, bool compress = true)
-      : RangeElement<T>(r, compress) {}
+      : RangeElement<T>(r, compress), level(1) {}
 
     // bit range
     RangeMapBase(const T& rh, const T& rl, bool compress = true)
-      : RangeElement<T>(rh, rl, compress) {}
+      : RangeElement<T>(rh, rl, compress), level(1) {}
 
     // type conversion
     RangeMapBase(const RangeElement<T>& r)
-      : RangeElement<T>(r) {}
+      : RangeElement<T>(r), level(1) {}
 
     // combined build
     RangeMapBase(const RangeElement<T>& r, const std::list<RangeMapBase>& rlist)
-      : RangeElement<T>(r), child(rlist) {}
+      : RangeElement<T>(r), child(rlist) {
+      if(rlist.empty())
+        level = 1;
+      else
+        level = 1 + rlist.front().level;
+    }
 
     // copy
     RangeMapBase(const RangeMapBase& r)
-      : RangeElement<T>(r), child(r.child) {}
+      : RangeElement<T>(r), child(r.child), level(r.level) {}
 
     // assign
     RangeMapBase& operator= (const RangeElement<T>& r) {
@@ -85,6 +91,18 @@ namespace CppRange {
     // RangeElement::first();
     // RangeElement::second();
     
+    const std::list<RangeMapBase>& get_child() const {
+      return child;
+    }
+
+    void set_child(const std::list<RangeMapBase>& c) {
+      child = c;
+      if(c.empty())
+        level = 1;
+      else
+        level = 1 + c.front().level;      
+    }
+    
     virtual void set_compress(bool compress) {
       RangeElement<T>::set_compress(compress);
       BOOST_FOREACH(RangeMapBase& b, child)
@@ -94,10 +112,10 @@ namespace CppRange {
     // size of bit
     virtual T size_bit() const {
       // if any of the sub-range is invalid, the result will be 0
-      T rv(RangeElement<T>::size_bit());
+      T rv = 0;
       BOOST_FOREACH(const RangeMapBase& b, child)
-        rv = rv * b.size_bit();
-      return rv;
+        rv = rv + b.size_bit();
+      return rv * RangeElement<T>::size_bit();
     }
     
     // valid range expression
@@ -238,13 +256,13 @@ namespace CppRange {
         // higher part
         if(first() > RAnd.first()) {
           boost::get<0>(rv) = *this;
-          boost::get<0>(rv).second() = RAnd.first() + 1;
+          boost::get<0>(rv).second() = RAnd.first() + min_unit<T>();
         }
 
         // lower part
         if(RAnd.second() > second()) {
           boost::get<2>(rv) = *this;
-          boost::get<2>(rv).first() = RAnd.second() - 1;          
+          boost::get<2>(rv).first() = RAnd.second() - min_unit<T>();          
         }
 
         // the middle part

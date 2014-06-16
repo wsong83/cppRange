@@ -172,6 +172,11 @@ namespace CppRange {
       return rv;
     }
 
+    // reduce with another range
+    virtual RangeMapBase reduce(const RangeMap& r) const {
+      return RangeMap(RangeMapBase<T>::reduce(child, r.child));
+    }
+
 
 
   };

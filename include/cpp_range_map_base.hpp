@@ -102,6 +102,10 @@ namespace CppRange {
       else
         level = 1 + c.front().level;      
     }
+
+    unsigned int get_level() const {
+      return level;
+    }
     
     virtual void set_compress(bool compress) {
       RangeElement<T>::set_compress(compress);
@@ -130,7 +134,7 @@ namespace CppRange {
     
     // check whether range r is enclosed in this range 
     virtual bool is_enclosed(const RangeMapBase& r) const {
-      if(RangeElement<T>::is_enclosed(r)) {
+      if(level == r.level && RangeElement<T>::is_enclosed(r)) {
         return is_enclosed(child, r.child);
       } else
         return false;
@@ -139,6 +143,9 @@ namespace CppRange {
 
     // check whether range r is equal with this range
     virtual bool is_same(const RangeMapBase& r) const {
+      if(level != r.level)
+        return false;
+
       if(!RangeElement<T>::is_same(r))
         return false;
       
@@ -158,6 +165,9 @@ namespace CppRange {
     
     // weak order
     virtual bool less(const RangeMapBase& r) const {
+      if(level != r.level)
+        return false;
+
       if(!RangeElement<T>::is_valid() || !r.RangeElement<T>::is_valid()) 
         return false;
       
@@ -188,8 +198,12 @@ namespace CppRange {
     virtual boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
     combine(const RangeMapBase& r) const {
       boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> rv;
+      
+      if(level != r.level)
+        return rv;     
+
       RangeElement<T> RAnd = RangeElement<T>::overlap(r);
-      if(r.is_valid()) {
+      if(RAnd.is_valid()) {
         // get the standard division
         RangeElement<T> rH, rM, rL;
         boost::tie(rH, rM, rL) = RangeElement<T>::divideBy(r);
@@ -229,6 +243,9 @@ namespace CppRange {
 
     // overlap two ranges
     virtual RangeMapBase overlap(const RangeMapBase& r) const {
+      if(level != r.level)
+        return RangeMapBase();     
+
       RangeMapBase rv(RangeElement<T>::combine(r));
       if(rv.is_valid() && child.size()) {       
         // {A|B} & {C|D} == {A&C | A&D | B&C | B&D}
@@ -249,6 +266,9 @@ namespace CppRange {
     // reduce with another range
     virtual boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
     reduce(const RangeMapBase& r) const {
+      if(level != r.level)
+        return RangeMapBase();     
+
       RangeElement<T> RAnd = RangeElement<T>::overlap(r);
       boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> rv;
       boost::get<1>(rv) = *this;
@@ -285,6 +305,117 @@ namespace CppRange {
   public:
     //////////////////////////////////
     // static helper functions
+
+    // set compress state for child list
+    static void set_compress(std::list<RangeMapBase>& rlist, bool compress) {
+      BOOST_FOREACH(RangeMapBase& b, rlist)
+        b.set_compress(compress);      
+    }
+
+    // claculat the bit size
+    static T size_bit(const std::list<RangeMapBase>& rlist) {
+      T rv = 0;
+      BOOST_FOREACH(const RangeMapBase& b, rlist)
+        rv = rv + b.size_bit();
+      return rv;
+    }
+
+    // valid range expression
+    static bool is_valid(const std::list<RangeMapBase>& rlist) {
+      BOOST_FOREACH(const RangeMapBase& b, rlist)
+        if(!b.is_valid()) return false;
+      return true;
+    }
+
+    // check whether a range list encloses another one
+    static bool is_enclosed(const std::list<RangeMapBase>& lhs_arg, 
+                     const std::list<RangeMapBase>& rhs_arg
+                     ) {
+      
+      std::list<RangeMapBase> lhs = lhs_arg;
+      std::list<RangeMapBase> rhs = rhs_arg;
+
+      typename std::list<RangeMapBase<T> >::iterator lit, rit;
+      for(lit = lhs.begin(), rit = rhs.begin();
+          lit == lhs.end() || rit == rhs.end();
+          ) {
+        
+        if(lit->RangeElement<T>::overlap(*rit).is_valid()) {
+          
+          // using the standard divide function
+          RangeElement<T> rH, rM, rL;
+          boost::tie(rH, rM, rL) = lit->RangeElement<T>::divideBy(*rit);
+          
+          // check the higher part
+          if(rH.is_valid() && rit->RangeElement<T>::is_enclosed(rH)) // rit > rH
+          return false;
+        
+          // the overlapped part
+          if(!is_enclosed(lit->child, rit->child))
+            return false;
+          
+          // check the lower part
+          if(rL.is_valid()) {
+            if(rit->RangeElement<T>::is_enclosed(rH)) {
+              ++lit;
+              *rit = RangeMapBase(rL, rit->child);
+            } else {
+              ++lit;
+              *lit = RangeMapBase(rL, lit->child);
+            }
+          } else {
+            ++lit;
+            ++rit;
+          }
+        } else {
+          if(lit->RangeElement<T>::less(*rit))
+            return false;
+          else
+            ++lit;
+        }
+      }
+
+      if(rit != rhs.end())
+        return false;
+      else
+        return true;
+    }
+
+    // check whether two range lists are equal
+    static bool is_same(const std::list<RangeMapBase>& lhs_arg, 
+                        const std::list<RangeMapBase>& rhs_arg
+                        ) {
+      typename std::list<RangeMapBase>::const_iterator it_loc, it_r;
+      for(lit = lhs_arg.begin(), rit = rhs_arg.begin();
+          lit != lhs_arg.end() && rit != rhs_arg.end();
+          ++lit, ++rit) {
+        if(!lit->is_same(*rit))
+          return false;
+      }
+       
+      if(lit != lhs_arg.end() || rit != rhs_arg.end())
+        return false;
+      else
+        return true;
+    }
+
+    // weak order
+    static bool less(const std::list<RangeMapBase>& lhs_arg, 
+                     const std::list<RangeMapBase>& rhs_arg
+                     ) {
+      typename std::list<RangeMapBase<T> >::const_iterator lit, rit;
+      for(lit = lhs_arg.begin(), rit = rhs_arg.begin();
+          lit != lhs_arg.end() && rit != rhs_arg.end();
+          ++lit, ++rit) {
+        if(!lit->is_same(*rit)) // the first non-equal range
+          return lit->less(*rit);
+      }
+
+      if(lit != lhs_arg.end()) // local hase larger range
+        return false;
+      else
+        return true;
+    }
 
     // combine two child lists
     static std::list<RangeMapBase> 
@@ -342,60 +473,25 @@ namespace CppRange {
       return rv;
     }
 
-    // check whether a range list encloses another one
-    static bool is_enclosed(const std::list<RangeMapBase>& lhs_arg, 
-                     const std::list<RangeMapBase>& rhs_arg
-                     ) {
-      
-      std::list<RangeMapBase> lhs = lhs_arg;
-      std::list<RangeMapBase> rhs = rhs_arg;
 
-      typename std::list<RangeMapBase<T> >::iterator lit, rit;
-      for(lit = lhs.begin(), rit = rhs.begin();
-          lit == lhs.end() || rit == rhs.end();
-          ) {
-        
-        if(lit->RangeElement<T>::overlap(*rit).is_valid()) {
-          
-          // using the standard divide function
-          RangeElement<T> rH, rM, rL;
-          boost::tie(rH, rM, rL) = lit->RangeElement<T>::divideBy(*rit);
-          
-          // check the higher part
-          if(rH.is_valid() && rit->RangeElement<T>::is_enclosed(rH)) // rit > rH
-          return false;
-        
-          // the overlapped part
-          if(!is_enclosed(lit->child, rit->child))
-            return false;
-          
-          // check the lower part
-          if(rL.is_valid()) {
-            if(rit->RangeElement<T>::is_enclosed(rH)) {
-              ++lit;
-              *rit = RangeMapBase(rL, rit->child);
-            } else {
-              ++lit;
-              *lit = RangeMapBase(rL, lit->child);
-            }
-          } else {
-            ++lit;
-            ++rit;
-          }
-        } else {
-          if(lit->RangeElement<T>::less(*rit))
-            return false;
-          else
-            ++lit;
+    // overlap two ranges
+    static std::list<RangeMapBase>
+    overlap(const std::list<RangeMapBase>& lhs_arg, 
+           const std::list<RangeMapBase>& rhs_arg) {
+
+      std::list<RangeMapBase> rv;
+
+      BOOST_FOREACH(const RangeMapBase<T>& cl, lhs_arg) {
+        BOOST_FOREACH(const RangeMapBase<T>& cr, rhs_arg) {
+          RangeMapBase<T> result = cl & cr;
+          if(result.is_valid())
+            rv.push_back(result);
         }
       }
-
-      if(rit != rhs.end())
-        return false;
-      else
-        return true;
+      return rv;
     }
 
+    // reduce the content of a range list (rhs) from another (lhs)
     static std::list<RangeMapBase>
     reduce(const std::list<RangeMapBase>& lhs_arg, 
            const std::list<RangeMapBase>& rhs_arg) {

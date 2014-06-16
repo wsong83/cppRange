@@ -45,56 +45,69 @@ namespace CppRange {
   class RangeMap {
   private:
     std::list<RangeMapBase<T> > child; // sub-dimensions
-
+    unsigned int level;                // level of sub-ranges    
   public:
     
     //////////////////////////////////////////////
     // constructors
     // default to construct an range with undefined value
-    RangeMap() {}
+    RangeMap()
+      : level(0) {}
 
     // single bit range
-    RangeMap(const T& r, bool compress = true) {
+    RangeMap(const T& r, bool compress = true) 
+      : level(1) {
       child.push_back(RangeMapBase<T>(r, compress));
     }
 
     // bit range
-    RangeMap(const T& rh, const T& rl, bool compress = true) {
+    RangeMap(const T& rh, const T& rl, bool compress = true) 
+      : level(1) {
       child.push_back(RangeMapBase<T>(rh, rl, compress));
     }
 
     // type conversion
-    RangeMap(const RangeMapBase<T>& r) {
+    RangeMap(const RangeMapBase<T>& r) 
+      : level(1) {
       child.push_back(r);
     }
 
     // type conversion
-    RangeMap(const RangeElement<T>& r) {
+    RangeMap(const RangeElement<T>& r) 
+      : level(1) {
       child.push_back(RangeMapBase<T>(r));
     }
 
     // combined build
     RangeMap(const std::list<RangeMapBase<T> >& rlist)
-      : child(rlist) {}
+      : child(rlist) {
+      if(rlist.empty())
+        level = 0;
+      else
+        level = rlist.front().level;
+    }
 
     // combined build
-    RangeMap(const std::list<RangeElement<T> >& rlist) {
+    RangeMap(const std::list<RangeElement<T> >& rlist)  
+      : level(1) {
       BOOST_FOREACH(const RangeElement<T>& r, rlist)
         child.push_back(RangeMapBase<T>(r));
     }
 
     // copy
     RangeMap(const RangeMap& r)
-      : child(r.child) {}
+      : child(r.child), level(r.level) {}
     
     // assign
     RangeMap& operator= (const RangeElement<T>& r) {
       this->push_back(RangeMapBase<T>(r));
+      this->level = 1;
     }
    
     // assign
     RangeMap& operator= (const RangeMapBase<T>& r) {
       this->push_back(r);
+      this->level = r.get_level();
     }
 
     //////////////////////////////////////////////

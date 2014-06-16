@@ -233,11 +233,25 @@ namespace CppRange {
     reduce(const RangeMapBase& r) const {
       RangeElement<T> RAnd = RangeElement<T>::overlap(r);
       boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> rv;
-      if(!RAnd.is_valid()) {
-	boost::get<1>(rv) = *this;
-      } else {
-	
+      boost::get<1>(rv) = *this;
+      if(RAnd.is_valid()) {
+        // higher part
+        if(first() > RAnd.first()) {
+          boost::get<0>(rv) = *this;
+          boost::get<0>(rv).second() = RAnd.first() + 1;
+        }
+
+        // lower part
+        if(RAnd.second() > second()) {
+          boost::get<2>(rv) = *this;
+          boost::get<2>(rv).first() = RAnd.second() - 1;          
+        }
+
+        // the middle part
+        boost::get<1>(rv).child = reduce(child, r.child);
       }
+
+      return rv;
     }
 
   private:
@@ -275,7 +289,7 @@ namespace CppRange {
         if(rH.is_valid()) rv.push_back(rH);
         if(rM.is_valid()) {
           // the two ranges are overlapped
-          rv.push_back(rH);
+          rv.push_back(rM);
 
           if(rL.is_valid()) {
             if(lit->RangeElement<T>::is_enclosed(rL)) {
@@ -364,7 +378,64 @@ namespace CppRange {
         return true;
     }
 
-    static void reduce(std::list<RangeMapBase>& rlist) {}
+    static std::list<RangeMapBase>
+    reduce(const std::list<RangeMapBase>& lhs_arg, 
+           const std::list<RangeMapBase>& rhs_arg) {
+      
+      std::list<RangeMapBase> lhs = lhs_arg;
+      std::list<RangeMapBase> rhs = rhs_arg;
+      std::list<RangeMapBase> rv;
+      
+      typename std::list<RangeMapBase<T> >::iterator lit, rit;
+      for(lit = lhs.begin(), rit = rhs.begin();
+          lit == lhs.end() || rit == rhs.end();
+          ) {
+        // using the standard combine function
+        RangeElement<T> rH, rM, rL;
+        boost::tie(rH, rM, rL) = lit->RangeElement::divideBy(*rit);
+       
+        // check result
+        if(rH.is_valid() && lit->RangeElement<T>::is_enclosed(rH)) {
+          RangeMapBase mH(rH, lit->child);          
+          rv.push_back(mH);
+        }
+
+        if(rM.is_valid()) {
+          // the two ranges are overlapped
+          RangeMapBase mM(rM);
+          mM.child = reduce(lit->child, rit->child);
+          rv.push_back(mM);
+
+          if(rL.is_valid()) {
+            if(lit->RangeElement<T>::is_enclosed(rL)) {
+              // the lower part belongs to lit, rit proceeds and lit recounts
+              ++rit;
+              *lit = RangeMapBase(rL, lit->child);
+            } else {
+              // otherwise lit proceeds and rit recounts
+             ++lit;
+             *rit = RangeMapBase(rL, rit->child);
+           }
+          } else {
+            // both range list proceed
+            ++rit;
+            ++lit;
+          }
+        } else {
+          // the two ranges are disjunctive
+          if(lit->RangeElement<T>::is_enclosed(rL))
+            ++rit;
+          else
+            ++lit;
+        }
+      }
+
+      // push the rest
+      if(lit != lhs.end())
+        rv.splice(rv.end(), lhs, lit, lhs.end());
+
+      return rv;
+    }
 
   };
     

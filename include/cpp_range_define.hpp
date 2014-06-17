@@ -40,13 +40,13 @@ namespace CppRange {
   }
 
   // specializations
-  inline template<>
-  double min_unit<double>() {
+  template<>
+  inline double min_unit<double>() {
     return 0.0;
   }
 
-  inline template<>
-  float min_unit<double>() {
+  template<>
+  inline float min_unit<float>() {
     return 0.0;
   }
 

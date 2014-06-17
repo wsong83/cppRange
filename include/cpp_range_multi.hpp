@@ -35,6 +35,8 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/foreach.hpp>
 
+#include "cpp_range_element.hpp"
+
 namespace CppRange {
 
   ////////////////////////////////////////////////// 
@@ -69,7 +71,7 @@ namespace CppRange {
     }
 
     // construct from a list of RangeElements
-    Range(const std::list<RangeElement<T> >& l, bool compress = true) 
+    explicit Range(const std::list<RangeElement<T> >& l, bool compress = true) 
       : compressed(compress) {
       r_array.resize(l.size());
       unsigned int i = 0;
@@ -77,11 +79,11 @@ namespace CppRange {
         r_array[i++]=r;
     }
     // construct from a list of RangeElements
-    Range(const std::vector<RangeElement<T> >& l, bool compress = true)
+    explicit Range(const std::vector<RangeElement<T> >& l, bool compress = true)
       : compressed(compress), r_array(l) {}
 
     // construct from a list of value pairs
-    Range(const std::list<std::pair<T,T> >& l, bool compress = true) 
+    explicit Range(const std::list<std::pair<T,T> >& l, bool compress = true) 
       : compressed(compress) {
       r_array.resize(l.size());
       unsigned int i = 0;
@@ -91,7 +93,7 @@ namespace CppRange {
     }
 
     // construct from a list of RangeElements
-    Range(const std::vector<std::pair<T,T> >& l, bool compress = true)
+    explicit Range(const std::vector<std::pair<T,T> >& l, bool compress = true)
       : compressed(compress) {
       r_array.resize(l.size());
       unsigned int i = 0;

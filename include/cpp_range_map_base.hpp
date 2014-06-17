@@ -31,7 +31,7 @@
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "cpp_range_element.hpp"
+#include "cpp_range_multi.hpp"
 
 namespace CppRange {
 
@@ -64,11 +64,26 @@ namespace CppRange {
       : RangeElement<T>(rh, rl, compress), level(1) {}
 
     // type conversion
-    RangeMapBase(const RangeElement<T>& r)
+    explicit RangeMapBase(const RangeElement<T>& r)
       : RangeElement<T>(r), level(1) {}
 
+    // type conversion
+    explicit RangeMapBase(const Range<T>& r) 
+      :level(0) {
+      unsigned int rlevel = r.size_dimension();
+      if(rlevel > 0) {
+        RangeMapBase m(r[rlevel-1]);
+        for(int i=rlevel-2; i>=0; i--) {
+          RangeMapBase n(r[i]);
+          n.add_child(m);
+          m = n;
+        }
+        *this = m;
+      }
+    }
+
     // combined build
-    RangeMapBase(const RangeElement<T>& r, const std::list<RangeMapBase>& rlist)
+    explicit RangeMapBase(const RangeElement<T>& r, const std::list<RangeMapBase>& rlist)
       : RangeElement<T>(r), child(rlist) {
       if(rlist.empty())
         level = 1;
@@ -77,7 +92,7 @@ namespace CppRange {
     }
 
     // copy
-    RangeMapBase(const RangeMapBase& r)
+    explicit RangeMapBase(const RangeMapBase& r)
       : RangeElement<T>(r), child(r.child), level(r.level) {}
 
     // assign
@@ -192,9 +207,9 @@ namespace CppRange {
         // get the higher part
         if(rH.is_valid()) {
           if(RangeElement<T>::is_enclosed(rH)) // this > rH
-            boost::get<0>(rv).child = child;
+            boost::get<0>(rv).set_child(child);
           else
-            boost::get<0>(rv).child = r.child;
+            boost::get<0>(rv).set_child(r.child);
         }
 
         // the overlapped part
@@ -203,9 +218,9 @@ namespace CppRange {
         // get the lower part
         if(rL.is_valid()) {
           if(RangeElement<T>::is_enclosed(rL)) // this > rL
-            boost::get<2>(rv).child = child;
+            boost::get<2>(rv).set_child(child);
           else
-            boost::get<2>(rv).child = r.child;
+            boost::get<2>(rv).set_child(r.child);
         }
       } else {                  // two inadjacent ranges
         if(less(r)) {
@@ -239,7 +254,7 @@ namespace CppRange {
 
       RangeElement<T> RAnd = RangeElement<T>::overlap(r);
       boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> rv;
-      boost::get<1>(rv) = *this;
+      boost::get<1>(rv) = RAnd;
       if(RAnd.is_valid()) {
         // higher part
         if(first() > RAnd.first()) {
@@ -254,7 +269,7 @@ namespace CppRange {
         }
 
         // the middle part
-        boost::get<1>(rv).child = reduce(child, r.child);
+        boost::get<1>(rv).add_child(reduce(child, r.child));
       }
 
       return rv;
@@ -275,10 +290,55 @@ namespace CppRange {
     // static helper functions
 
     static void add_child(std::list<RangeMapBase>& rlist, const RangeMapBase& r) {
-      std::list<RangeMapBase>::iterator it;
-      for(it = rlist.begin(); it != rlist.end(); ++it)
-        if(!r.less(*it)) break;
-      rlist.insert(it, r);
+      
+      std::list<RangeMapBase> rv;
+      RangeMapBase mr = r;
+
+      typename std::list<RangeMapBase<T> >::iterator lit;
+      for(lit = rlist.begin();
+          lit == rlist.end();
+          ) {
+        // using the standard combine function
+        RangeMapBase rH, rM, rL;
+        boost::tie(rH, rM, rL) = lit->combine(mr);
+       
+        // check result
+        if(rH.is_valid()) rlist.insert(lit, rH);
+        if(rM.is_valid()) {
+          // the two ranges are overlapped
+          rlist.insert(lit, rH);
+
+          if(rL.is_valid()) {
+            if(lit->RangeElement<T>::is_enclosed(rL)) {
+              // the lower part belongs to lit, insertion finished
+              mr = RangeMapBase();
+              *lit = rL;
+              break;
+            } else {
+              // otherwise lit proceeds and mr recounts
+              lit = rlist.erase(lit);
+              mr = rL;
+           }
+          } else {
+            // rL empty also means finished
+            mr = RangeMapBase();
+            lit = rlist.erase(lit);
+            break;
+          }
+        } else {
+          // the two ranges are disjunctive
+          if(lit->RangeElement<T>::is_enclosed(rL)) {
+            // mr already inserted
+            mr = RangeMapBase();
+            break;
+          } else
+            ++lit;
+        }
+      }
+
+      // push the rest
+      if(mr.is_valid())
+        rlist.insert(lit, mr);
     }
 
     // set compress state for child list

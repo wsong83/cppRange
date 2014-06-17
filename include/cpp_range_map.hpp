@@ -67,19 +67,25 @@ namespace CppRange {
     }
 
     // type conversion
-    RangeMap(const RangeMapBase<T>& r) 
+    explicit RangeMap(const RangeMapBase<T>& r) 
       : level(r.get_level()) {
       child.push_back(r);
     }
 
     // type conversion
-    RangeMap(const RangeElement<T>& r) 
+    explicit RangeMap(const RangeElement<T>& r) 
       : level(1) {
       child.push_back(RangeMapBase<T>(r));
     }
 
+    // type conversion
+    explicit RangeMap(const Range<T>& r)
+      : level(r.size_dimension()) {
+      add_child(RangeMapBase<T>(r));
+    }
+
     // combined build
-    RangeMap(const std::list<RangeMapBase<T> >& rlist)
+    explicit RangeMap(const std::list<RangeMapBase<T> >& rlist)
       : child(rlist) {
       if(rlist.empty())
         level = 0;
@@ -88,14 +94,14 @@ namespace CppRange {
     }
 
     // combined build
-    RangeMap(const std::list<RangeElement<T> >& rlist)  
+    explicit RangeMap(const std::list<RangeElement<T> >& rlist)  
       : level(1) {
       BOOST_FOREACH(const RangeElement<T>& r, rlist)
         child.push_back(RangeMapBase<T>(r));
     }
 
     // copy
-    RangeMap(const RangeMap& r)
+    explicit RangeMap(const RangeMap& r)
       : child(r.child), level(r.level) {}
     
     // assign

@@ -109,84 +109,49 @@ namespace CppRange {
     
     virtual void set_compress(bool compress) {
       RangeElement<T>::set_compress(compress);
-      BOOST_FOREACH(RangeMapBase& b, child)
-        b.set_compress(compress);
+      set_compress(child);
     }
 
     // size of bit
     virtual T size_bit() const {
-      // if any of the sub-range is invalid, the result will be 0
-      T rv = 0;
-      BOOST_FOREACH(const RangeMapBase& b, child)
-        rv = rv + b.size_bit();
-      return rv * RangeElement<T>::size_bit();
+      return size_bit(child) * RangeElement<T>::size_bit();
     }
     
     // valid range expression
     virtual bool is_valid() const {
-      if(RangeElement<T>::is_valid()) {
-        BOOST_FOREACH(const RangeMapBase& b, child)
-          if(!b.is_valid()) return false;
-        return true;
-      } else
-        return false;
+      return RangeElement<T>::is_valid() && is_valid(child);
     }
     
     // check whether range r is enclosed in this range 
     virtual bool is_enclosed(const RangeMapBase& r) const {
-      if(level == r.level && RangeElement<T>::is_enclosed(r)) {
-        return is_enclosed(child, r.child);
-      } else
-        return false;
+      return 
+        (level == r.level) 
+        && RangeElement<T>::is_enclosed(r) 
+        && is_enclosed(child, r.child);
     }
     
 
     // check whether range r is equal with this range
     virtual bool is_same(const RangeMapBase& r) const {
-      if(level != r.level)
-        return false;
-
-      if(!RangeElement<T>::is_same(r))
-        return false;
-      
-      if(child.size() != r.child.size())
-        return false;
-
-      typename std::list<RangeMapBase<T> >::const_iterator it_loc, it_r;
-      for(it_loc = child.begin(), it_r = r.child.begin();
-          it_loc != child.end() && it_r != r.child.end();
-          ++it_loc, ++it_r)
-        if(it_loc->is_same(*it_r)) 
-          return false;
-      
-      return true;
+      return 
+        (level == r.level)
+        && RangeElement<T>::is_same(r)
+        && (child.size() == r.child.size())
+        && is_same(child, r.child());
     }
   
     
     // weak order
     virtual bool less(const RangeMapBase& r) const {
-      if(level != r.level)
-        return false;
-
-      if(!RangeElement<T>::is_valid() || !r.RangeElement<T>::is_valid()) 
-        return false;
-      
-      if(is_same(r)) return false;
-
-      if(RangeElement<T>::is_same(r)) {
-        typename std::list<RangeMapBase<T> >::const_iterator it_loc, it_r;
-        for(it_loc = child.begin(), it_r = r.child.begin();
-            it_loc != child.end() && it_r != r.child.end();
-            ++it_loc, ++it_r) {
-          if(!it_loc->is_same(*it_r)) // the first non-equal range
-            return it_loc->less(*it_r);
-        }
-        if(it_loc != child.end()) // local hase larger range
-          return false;
-        else
-          return true;
-      } else 
-        return RangeElement<T>::less(r); // even the current range is not equal
+      return 
+        (level == r.level)
+        && (
+            RangeElement<T>::less(r) 
+            || (
+                RangeElement<T>::is_same(r) 
+                && less(child, r.child)
+                )
+            );
     }
 
     // check whether r has shared range with this range
@@ -214,20 +179,20 @@ namespace CppRange {
         // get the higher part
         if(rH.is_valid()) {
           if(RangeElement<T>::is_enclosed(rH)) // this > rH
-            boost::get<0>(rv).child = child;
+            boost::get<0>(rv).set_child(child);
           else
-            boost::get<0>(rv).child = r.child;
+            boost::get<0>(rv).set_child(r.child);
         }
 
         // the overlapped part
-        boost::get<1>(rv).child = combine(child, r.child);
+        boost::get<1>(rv).set_child(combine(child, r.child));
 
         // get the lower part
         if(rL.is_valid()) {
           if(RangeElement<T>::is_enclosed(rL)) // this > rL
-            boost::get<2>(rv).child = child;
+            boost::get<2>(rv).set_child(child);
           else
-            boost::get<2>(rv).child = r.child;
+            boost::get<2>(rv).set_child(r.child);
         }
       } else {                  // two inadjacent ranges
         if(less(r)) {
@@ -247,19 +212,9 @@ namespace CppRange {
         return RangeMapBase();     
 
       RangeMapBase rv(RangeElement<T>::combine(r));
-      if(rv.is_valid() && child.size()) {       
-        // {A|B} & {C|D} == {A&C | A&D | B&C | B&D}
-        // the resulted list is in order automatically
-        BOOST_FOREACH(const RangeMapBase<T>& cl, child) {
-          BOOST_FOREACH(const RangeMapBase<T>& cr, r.child) {
-            RangeMapBase<T> result = cl & cr;
-            if(result.is_valid())
-              rv.child.push_back(result);
-          }
-        }
-        if(rv.child.empty())
-          return RangeMapBase(); // child ranges combined empty
-      }
+      if(rv.is_valid())
+        rv.set_child(overlap(child, r.child));
+
       return rv;
     }
     
@@ -286,7 +241,7 @@ namespace CppRange {
         }
 
         // the middle part
-        boost::get<1>(rv).child = reduce(child, r.child);
+        boost::get<1>(rv).set_child(reduce(child, r.child));
       }
 
       return rv;
@@ -517,7 +472,7 @@ namespace CppRange {
         if(rM.is_valid()) {
           // the two ranges are overlapped
           RangeMapBase mM(rM);
-          mM.child = reduce(lit->child, rit->child);
+          mM.set_child(reduce(lit->child, rit->child));
           rv.push_back(mM);
 
           if(rL.is_valid()) {

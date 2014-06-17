@@ -103,6 +103,19 @@ namespace CppRange {
         level = 1 + c.front().level;      
     }
 
+    // insert a sub-range
+    bool add_child(const RangeMapBase& r) {
+      if(!r.is_valid()) return false;
+
+      if(child.empty)
+        level = r.level + 1;
+      else if(level != r.level + 1)
+        return false;
+
+      add_child(child, r);
+      return true;
+    }
+
     unsigned int get_level() const {
       return level;
     }
@@ -179,20 +192,20 @@ namespace CppRange {
         // get the higher part
         if(rH.is_valid()) {
           if(RangeElement<T>::is_enclosed(rH)) // this > rH
-            boost::get<0>(rv).set_child(child);
+            boost::get<0>(rv).child = child;
           else
-            boost::get<0>(rv).set_child(r.child);
+            boost::get<0>(rv).child = r.child;
         }
 
         // the overlapped part
-        boost::get<1>(rv).set_child(combine(child, r.child));
+        boost::get<1>(rv).child = combine(child, r.child);
 
         // get the lower part
         if(rL.is_valid()) {
           if(RangeElement<T>::is_enclosed(rL)) // this > rL
-            boost::get<2>(rv).set_child(child);
+            boost::get<2>(rv).child = child;
           else
-            boost::get<2>(rv).set_child(r.child);
+            boost::get<2>(rv).child = r.child;
         }
       } else {                  // two inadjacent ranges
         if(less(r)) {
@@ -213,7 +226,7 @@ namespace CppRange {
 
       RangeMapBase rv(RangeElement<T>::combine(r));
       if(rv.is_valid())
-        rv.set_child(overlap(child, r.child));
+        rv.child = overlap(child, r.child);
 
       return rv;
     }
@@ -241,7 +254,7 @@ namespace CppRange {
         }
 
         // the middle part
-        boost::get<1>(rv).set_child(reduce(child, r.child));
+        boost::get<1>(rv).child = reduce(child, r.child);
       }
 
       return rv;
@@ -260,6 +273,13 @@ namespace CppRange {
   public:
     //////////////////////////////////
     // static helper functions
+
+    static void add_child(std::list<RangeMapBase>& rlist, const RangeMapBase& r) {
+      std::list<RangeMapBase>::iterator it;
+      for(it = rlist.begin(); it != rlist.end(); ++it)
+        if(!r.less(*it)) break;
+      rlist.insert(it, r);
+    }
 
     // set compress state for child list
     static void set_compress(std::list<RangeMapBase>& rlist, bool compress) {
@@ -472,7 +492,7 @@ namespace CppRange {
         if(rM.is_valid()) {
           // the two ranges are overlapped
           RangeMapBase mM(rM);
-          mM.set_child(reduce(lit->child, rit->child));
+          mM.child = reduce(lit->child, rit->child);
           rv.push_back(mM);
 
           if(rL.is_valid()) {

@@ -68,7 +68,7 @@ namespace CppRange {
 
     // type conversion
     RangeMap(const RangeMapBase<T>& r) 
-      : level(1) {
+      : level(r.get_level()) {
       child.push_back(r);
     }
 
@@ -113,51 +113,66 @@ namespace CppRange {
     //////////////////////////////////////////////
     // Helpers
 
+  private:
+    const std::list<RangeMapBase<T> >& get_child() const {
+      return child;
+    }
+
+    void set_child(const std::list<RangeMapBase<T>& c) {
+      child = c;
+      if(c.empty())
+        level = 0;
+      else
+        level = c.front().get_level();      
+    }
+
+  public:
+
+    bool add_child(const RangeMapBase<T>& r) {
+      if(!r.is_valid()) return false;
+
+      if(child.empty)
+        level = r.level;
+      else if(level != r.level)
+        return false;
+
+      RangeMapBase<T>::add_child(child, r);
+      return true;
+    }
+
+    unsigned int get_level() const {
+      return level;
+    }
+
     virtual void set_compress(bool compress) {
-      BOOST_FOREACH(RangeMapBase<T>& b, child)
-        b.set_compress(compress);
+      RangeMapBase<T>::set_compress(child);
     }
     
     // valid range expression
     virtual bool is_valid() const {
-      BOOST_FOREACH(const RangeMapBase<T>& b, child)
-        if(!b.is_valid()) return false;
-      return true;
+      return RangeMapBase<T>::is_valid(child);
     }
 
     // check whether range r is enclosed in this range
     virtual bool is_enclosed(const RangeMap& r) const {
-      return RangeMapBase<T>::is_enclosed(child, r.child);
+      return 
+        (level == r.level) 
+        && RangeMapBase<T>::is_enclosed(child, r.child);
     }
 
     // check whether range r is equal with this range
     virtual bool is_same(const RangeMap& r) const {
-      if(child.size() != r.child.size())
-        return false;
-
-      typename std::list<RangeMapBase<T> >::const_iterator it_loc, it_r;
-      for(it_loc = child.begin(), it_r = r.child.begin();
-          it_loc != child.end() && it_r != r.child.end();
-          ++it_loc, ++it_r)
-        if(it_loc->is_same(*it_r)) 
-          return false;
-      
-      return true;
+      return 
+        (level == r.level)
+        && (child.size() == r.child.size())
+        && RangeMapBase<T>::is_same(child, r.child());
     }
 
     // weak order
     virtual bool less(const RangeMap& r) const {
-      typename std::list<RangeMapBase<T> >::const_iterator it_loc, it_r;
-      for(it_loc = child.begin(), it_r = r.child.begin();
-          it_loc != child.end() && it_r != r.child.end();
-          ++it_loc, ++it_r) {
-        if(!it_loc->is_same(*it_r)) // the first non-equal range
-          return it_loc->less(*it_r);
-      }
-      if(it_loc != child.end()) // local hase larger range
-        return false;
-      else
-        return true;
+      return 
+        (level == r.level)
+        && RangeMapBase<T>::less(child, r.child);
     }
 
     // check whether r has shared range with this range
@@ -167,27 +182,26 @@ namespace CppRange {
 
     // combine two ranges
     virtual RangeMap combine(const RangeMap& r) const {
-      return RangeMap(RangeMapBase<T>::combine(child, r.child));
+      if(level != r.level)
+        return RangeMap();
+      else
+        return RangeMap(RangeMapBase<T>::combine(child, r.child));
     }
 
     // overlap two ranges
     virtual RangeMap overlap(const RangeMap& r) const {
-      RangeMap rv;
-      // {A|B} & {C|D} == {A&C | A&D | B&C | B&D}
-      // the resulted list is in order automatically
-      BOOST_FOREACH(const RangeMapBase<T>& cl, child) {
-        BOOST_FOREACH(const RangeMapBase<T>& cr, r.child) {
-          RangeMapBase<T> result = cl & cr;
-          if(result.is_valid())
-            rv.child.push_back(result);
-        }
-      }
-      return rv;
+      if(level != r.level)
+        return RangeMap();
+      else
+        return RangeMap(RangeMapBase<T>::overlap(child, r.child));
     }
 
     // reduce with another range
     virtual RangeMapBase reduce(const RangeMap& r) const {
-      return RangeMap(RangeMapBase<T>::reduce(child, r.child));
+      if(level != r.level)
+        return RangeMap();
+      else
+        return RangeMap(RangeMapBase<T>::reduce(child, r.child));
     }
 
 

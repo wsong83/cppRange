@@ -231,6 +231,66 @@ namespace CppRange {
 
   };
 
+  /////////////////////////////////////////////
+  // overload operators
+
+  // rhs range is enclosed in lhs (not equal)
+  template <class T>
+  bool operator> (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
+  }
+
+  // rhs range is enclosed in lhs
+  template <class T>
+  bool operator>= (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return lhs.is_enclosed(rhs);
+  }
+
+  // lhs range is enclosed in rhs (not equal)
+  template <class T>
+  bool operator< (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return rhs.is_enclosed(lhs) && !rhs.is_same(lhs);
+  }
+
+  // lhs range is enclosed in rhs
+  template <class T>
+  bool operator<= (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return rhs.is_enclosed(lhs);
+  }
+  
+  // two ranges are equal
+  template <class T>
+  inline bool operator== (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return rhs.is_same(lhs);
+  }
+
+  // two ranges are not equal
+  template <class T>
+  inline bool operator!= (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return !rhs.is_same(lhs);
+  }
+
+  // return the overlapped range
+  // function does not check the result's validation
+  template <class T>  
+  RangeMap<T> operator& (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return lhs.overlap(rhs);
+  }
+
+  // return the combined range
+  // function does not check the result's validation
+  template <class T>  
+  RangeMap<T> operator| (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return lhs.combine(rhs);
+  }
+
+  // return the reduced range
+  // function does not check the result's validation
+  template <class T>  
+  RangeMap<T> operator- (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
+    return lhs.reduce(rhs);
+  }
+
   // standard out stream
   template<class T>
   std::ostream& operator<< (std::ostream& os, const RangeMap<T>& r) {

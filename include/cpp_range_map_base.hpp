@@ -359,6 +359,8 @@ namespace CppRange {
       // push the rest
       if(mr.is_valid())
         rlist.insert(lit, mr);
+
+      normalize(rlist);
     }
 
     // set compress state for child list
@@ -525,6 +527,7 @@ namespace CppRange {
       if(rit != rhs.end())
         rv.splice(rv.end(), rhs, rit, rhs.end());
 
+      normalize(rv);
       return rv;
     }
 
@@ -543,6 +546,7 @@ namespace CppRange {
             rv.push_back(result);
         }
       }
+      normalize(rv);
       return rv;
     }
 
@@ -603,7 +607,28 @@ namespace CppRange {
       if(lit != lhs.end())
         rv.splice(rv.end(), lhs, lit, lhs.end());
 
+      normalize(rv);
       return rv;
+    }
+
+    static void normalize (std::list<RangeMapBase>& rlist) {
+      // nothing to be normalized if there is less than one sub-range
+      if(rlist.size() <= 1) return true; 
+
+      // it is assumed that all sub-ranges are not overlapped and in weak order
+
+      typename std::list<RangeMapBase>::iterator it, nt;
+      nt = rlist.begin();
+      it = nt++;
+
+      while(nt != rlist.end()) {
+        if(it->RangeElement<T>::is_adjacent(*nt) && is_same(it->child, nt->child)) {
+          it->second() = nt->second();
+          nt = rlist.erase(nt);
+        } else {
+          it = nt++;
+        }
+      }
     }
 
   };

@@ -124,7 +124,7 @@ namespace CppRange {
       return child;
     }
 
-    void set_child(const std::list<RangeMapBase<T>& c) {
+    void set_child(const std::list<RangeMapBase<T> >& c) {
       child = c;
       if(c.empty())
         level = 0;
@@ -203,7 +203,7 @@ namespace CppRange {
     }
 
     // reduce with another range
-    virtual RangeMapBase reduce(const RangeMap& r) const {
+    virtual RangeMap reduce(const RangeMap& r) const {
       if(level != r.level)
         return RangeMap();
       else

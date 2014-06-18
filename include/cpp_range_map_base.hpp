@@ -103,8 +103,8 @@ namespace CppRange {
     //////////////////////////////////////////////
     // Helpers
 
-    // RangeElement::first();
-    // RangeElement::second();
+    using RangeElement<T>::first;
+    using RangeElement<T>::second;
     
     const std::list<RangeMapBase>& get_child() const {
       return child;
@@ -213,7 +213,7 @@ namespace CppRange {
         }
 
         // the overlapped part
-        boost::get<1>(rv).child = combine(child, r.child);
+        boost::get<1>(rv).set_child(combine(child, r.child));
 
         // get the lower part
         if(rL.is_valid()) {
@@ -269,7 +269,7 @@ namespace CppRange {
         }
 
         // the middle part
-        boost::get<1>(rv).add_child(reduce(child, r.child));
+        boost::get<1>(rv).set_child(reduce(child, r.child));
       }
 
       return rv;
@@ -420,7 +420,7 @@ namespace CppRange {
     static bool is_same(const std::list<RangeMapBase>& lhs_arg, 
                         const std::list<RangeMapBase>& rhs_arg
                         ) {
-      typename std::list<RangeMapBase>::const_iterator it_loc, it_r;
+      typename std::list<RangeMapBase>::const_iterator lit, rit;
       for(lit = lhs_arg.begin(), rit = rhs_arg.begin();
           lit != lhs_arg.end() && rit != rhs_arg.end();
           ++lit, ++rit) {
@@ -541,7 +541,7 @@ namespace CppRange {
           ) {
         // using the standard combine function
         RangeElement<T> rH, rM, rL;
-        boost::tie(rH, rM, rL) = lit->RangeElement::divideBy(*rit);
+        boost::tie(rH, rM, rL) = lit->RangeElement<T>::divideBy(*rit);
        
         // check result
         if(rH.is_valid() && lit->RangeElement<T>::is_enclosed(rH)) {
@@ -552,7 +552,7 @@ namespace CppRange {
         if(rM.is_valid()) {
           // the two ranges are overlapped
           RangeMapBase mM(rM);
-          mM.child = reduce(lit->child, rit->child);
+          mM.set_child(reduce(lit->child, rit->child));
           rv.push_back(mM);
 
           if(rL.is_valid()) {

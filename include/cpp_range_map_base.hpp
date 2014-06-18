@@ -275,6 +275,26 @@ namespace CppRange {
       return rv;
     }
 
+    // stream out function
+    virtual std::ostream& streamout(std::ostream& os) const{
+      RangeElement<T>::streamout(os);
+      if(!child.empty()) {
+        if(child.size() > 1) {  // more than one sub-ranges
+          os << "{";
+          for(typename std::list<RangeElement<T> >::const_iterator it = child.begin();
+              it != child.end(); ) {
+            os << *it;
+            ++it;
+            if(it != child.end()) os << ";";
+          }
+          os << "}";
+        } else {                // only one sub-range
+          os << child.front();
+        }
+      }
+      return os;
+    }
+
   private:
     // Disable some derived member functions
 
@@ -588,6 +608,11 @@ namespace CppRange {
 
   };
     
+  // standard out stream
+  template<class T>
+  std::ostream& operator<< (std::ostream& os, const RangeMapBase<T>& r) {
+    return r.streamout(os);
+  }
 
 }
 

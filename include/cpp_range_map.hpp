@@ -210,10 +210,32 @@ namespace CppRange {
         return RangeMap(RangeMapBase<T>::reduce(child, r.child));
     }
 
+    // stream out function
+    virtual std::ostream& streamout(std::ostream& os) const{
+      if(!child.empty()) {
+        if(child.size() > 1) {  // more than one sub-ranges
+          for(typename std::list<RangeElement<T> >::const_iterator it = child.begin();
+              it != child.end(); ) {
+            os << *it;
+            ++it;
+            if(it != child.end()) os << ";";
+          }
+        } else {                // only one sub-range
+          os << child.front();
+        }
+      } else                    // empty
+        os << "[]";
+      return os;
+    }
 
 
   };
 
+  // standard out stream
+  template<class T>
+  std::ostream& operator<< (std::ostream& os, const RangeMap<T>& r) {
+    return r.streamout(os);
+  }
 
 }
 

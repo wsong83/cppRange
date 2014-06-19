@@ -86,20 +86,19 @@ namespace CppRange {
 
     // size of bit
     virtual T size_bit() const {
-      if(is_valid())
-        return r_pair.first - r_pair.second + min_unit<T>();
-      else
-        return 0;
+      T bsize(r_pair.first - r_pair.second + min_unit<T>());
+      return !invalid && bsize > T(0) ? bsize : T(0);
     } 
 
     // valid range expression
     virtual bool is_valid() const {
-      return !invalid && !(r_pair.first < r_pair.second);
+      return size_bit() > T(0);
     }
 
     // check whether range r is enclosed in this range 
     virtual bool is_enclosed(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) return false;
+      if(!r.is_valid()) return true;
+      else if(!is_valid()) return false;
       else
         return (
                 !(r_pair.first < r.r_pair.first) && 
@@ -148,17 +147,21 @@ namespace CppRange {
         return (!(r_pair.first < r.r_pair.second) && !(r.r_pair.first < r_pair.second));
     }
 
-    // simple combine without check
+    // simple combine
     virtual RangeElement combine(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) 
-        return RangeElement();
-      else 
+      if(!is_valid())
+        return r;
+      else if(!r.is_valid()) 
+        return *this;
+      else if(is_adjacent(r))
         return RangeElement(std::max(r_pair.first, r.r_pair.first),
                             std::min(r_pair.second, r.r_pair.second),
                             compressed);
+      else
+        return RangeElement();
     }
 
-    // simple overlap without check
+    // simple overlap
     virtual RangeElement overlap(const RangeElement& r) const {
       if(!is_valid() || !r.is_valid()) 
         return RangeElement();
@@ -168,39 +171,49 @@ namespace CppRange {
                             compressed);
     }
     
-    // simple reduce without check
+    // simple reduce
     virtual RangeElement reduce(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) 
+      if(!is_valid()) 
         return RangeElement();
+      else if(!r.is_valid())
+        return *this;
       
-      RangeElement rv(*this);
-      if(!(r.r_pair.second > r_pair.first) && (r_pair.second < r.r_pair.second))
-        rv.r_pair.first = r.r_pair.second - min_unit<T>();
-      if(!(r.r_pair.first < r_pair.second) && (r_pair.first > r.r_pair.first))
-        rv.r_pair.second = r.r_pair.first + min_unit<T>();
-       return rv;
+      RangeElement RAnd = overlap(r);
+      if(!RAnd.is_valid())
+        return *this;
+      else if(is_same(RAnd))
+        return RangeElement();
+      else {
+        RangeElement rv(*this);
+        if(r_pair.first != RAnd.r_pair.first)
+          rv.r_pair.second = RAnd.r_pair.first + min_unit<T>();
+        if(r_pair.second != RAnd.r_pair.second)
+          rv.r_pair.first = RAnd.r_pair.second - min_unit<T>();
+        return rv;
+      }
     }
 
     // normalize divide
     virtual boost::tuple<RangeElement, RangeElement, RangeElement> 
     divideBy(const RangeElement& r) const {
       boost::tuple<RangeElement, RangeElement, RangeElement> rv;
-      if(!is_valid() || !r.is_valid()) 
+      if(!is_valid() || !r.is_valid()) {
+        boost::get<1>(rv) = combine(r);
         return rv;
+      }
 
       RangeElement RAnd = overlap(r);
       if(RAnd.is_valid()) {
         RangeElement ROr = combine(r);
-        RangeElement RMinus = ROr - RAnd;
-        boost::get<0>(rv) = RangeElement(ROr.first(), RMinus.second(), compressed);
+        boost::get<0>(rv) = RangeElement(ROr.first(), RAnd.first() +  min_unit<T>());
         boost::get<1>(rv) = RAnd;
-        boost::get<2>(rv) = RangeElement(RMinus.first(), ROr.second(), compressed);
+        boost::get<2>(rv) = RangeElement(RAnd.second() -  min_unit<T>(), ROr.second());
       } else {
         if(less(r)) {
-          boost::get<0>(rv) = RangeElement(r.first(), r.second(), compressed);
+          boost::get<0>(rv) = r;
           boost::get<2>(rv) = *this;
         } else {
-          boost::get<2>(rv) = RangeElement(r.first(), r.second(), compressed);
+          boost::get<2>(rv) = r;
           boost::get<0>(rv) = *this;          
         }
       }
@@ -228,25 +241,25 @@ namespace CppRange {
   // rhs range is enclosed in lhs (not equal)
   template <class T>
   bool operator> (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
+    return rhs.less(lhs);
   }
 
   // rhs range is enclosed in lhs
   template <class T>
   bool operator>= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return lhs.is_enclosed(rhs);
+    return rhs.less(lhs) || lhs.is_same(rhs);
   }
 
   // lhs range is enclosed in rhs (not equal)
   template <class T>
   bool operator< (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return rhs.is_enclosed(lhs) && !rhs.is_same(lhs);
+    return lhs.less(rhs);
   }
 
   // lhs range is enclosed in rhs
   template <class T>
   bool operator<= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return rhs.is_enclosed(lhs);
+    return lhs.less(rhs) || lhs.is_same(rhs);
   }
   
   // two ranges are equal

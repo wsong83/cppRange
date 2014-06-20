@@ -53,10 +53,10 @@ namespace CppRange {
   public:
     //////////////////////////////////////////////
     // data accessers
-    T& first() { invalid = false; return r_pair.first;}
-    const T& first() const { return r_pair.first;}
-    T& second() { invalid = false; return r_pair.second;}
-    const T& second() const { return r_pair.second;}
+    T& upper() { invalid = false; return r_pair.first;}
+    const T& upper() const { return r_pair.first;}
+    T& lower() { invalid = false; return r_pair.second;}
+    const T& lower() const { return r_pair.second;}
 
     //////////////////////////////////////////////
     // constructors
@@ -80,140 +80,35 @@ namespace CppRange {
     //////////////////////////////////////////////
     // Helpers
 
-    // size of bit
-    virtual T size_bit() const {
-      T bsize(r_pair.first - r_pair.second + min_unit<T>());
-      return !invalid && bsize > T(0) ? bsize : T(0);
-    } 
-
-    // valid range expression
-    virtual bool is_valid() const {
-      return size_bit() > T(0);
-    }
-
-    // check whether range r is enclosed in this range 
-    virtual bool is_enclosed(const RangeElement& r) const {
-      if(!r.is_valid()) return true;
-      else if(!is_valid()) return false;
-      else
-        return (
-                !(r_pair.first < r.r_pair.first) && 
-                !(r.r_pair.second < r_pair.second)
-                );      
-    }
-
-    // check whether range r is equal with this range 
-   virtual bool is_same(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) return false;
-      else
-        return (
-                r_pair.first == r.r_pair.first &&
-                r_pair.second == r.r_pair.second
-                );
-    }
-
-    // check whether r is adjacent to this range
-    virtual bool is_adjacent(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) return false;
-      else
-        return (!(r_pair.first + min_unit<T>() < r.r_pair.second) && !(r.r_pair.first + min_unit<T>() < r_pair.second));
-    }
-      
-    // weak order
-    virtual bool less(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) 
-        return false;
-      else if(r_pair.first < r.r_pair.first)
-        return true;
-      else if(r_pair.first > r.r_pair.first)
-        return false;
-      else if(r_pair.second > r.r_pair.second)
-        return true;
-      else if(r_pair.second < r.r_pair.second)
-        return false;
-      else
-        return false;
-    }
-
-    // check whether r has shared range with this range
-    virtual bool is_overlapped(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) 
-        return false;
-      else 
-        return (!(r_pair.first < r.r_pair.second) && !(r.r_pair.first < r_pair.second));
-    }
-
-    // simple combine
-    virtual RangeElement combine(const RangeElement& r) const {
-      if(!is_valid())
-        return r;
-      else if(!r.is_valid()) 
-        return *this;
-      else if(is_adjacent(r))
-        return RangeElement(std::max(r_pair.first, r.r_pair.first),
-                            std::min(r_pair.second, r.r_pair.second));
-      else
-        return RangeElement();
-    }
-
-    // simple overlap
-    virtual RangeElement overlap(const RangeElement& r) const {
-      if(!is_valid() || !r.is_valid()) 
-        return RangeElement();
-      else 
-        return RangeElement(std::min(r_pair.first, r.r_pair.first),
-                            std::max(r_pair.second, r.r_pair.second));
-    }
+    virtual T size() const;                             // get the size of the range
+    virtual bool empty() const;                         // ? this is empty
+    virtual bool in(T num) const;                       // ? num belongs to this range
+    virtual bool subset(const RangeElement& r) const;   // ? this is a subset of r
+    virtual bool proper_subset(const RangeElement& r) const;
+                                                        // ? this is a proper subset of r
+    virtual bool superset(const RangeElement& r) const; // ? this is a superset of r
+    virtual bool proper_superset(const RangeElement& r) const;
+                                                        // ? this is a proper superset of r
+    virtual bool singleton() const;                     // ? this is a singleton range 
+    virtual bool equal(const RangeElement& r) const;    // ? this == r 
+    virtual bool connected(const RangeElement& r) const;
+                                                        // ? this and r are connected
+    virtual bool less(const RangeElement& r) const;     // weak order compare
+    virtual bool overlap(const RangeElement& r) const;  // this & r != []
+    virtual bool disjoint(const RangeElement& r) const; // this & r == []
+    virtual RangeElement combine(const RangeElement& r) const;  
+                                                        // get the union of this and r
+    virtual RangeElement hull(const RangeElement& r) const;
+                                                        // get the minimal superset of the union
+                                                        // of this and r
+    virtual RangeElement intersection(const RangeElement& r) const;
+                                                        // get the intersection of this and r
+    virtual RangeElement complement(const RangeElement& r) const;
+                                                        // substract r from this range
+    virtual boost::tuple<RangeElement, RangeElement, RangeElement>
+    divide(const RangeElement& r) const;                // standard divide/partition this and r
     
-    // simple reduce
-    virtual RangeElement reduce(const RangeElement& r) const {
-      if(!is_valid()) 
-        return RangeElement();
-      else if(!r.is_valid())
-        return *this;
-      
-      RangeElement RAnd = overlap(r);
-      if(!RAnd.is_valid())
-        return *this;
-      else if(is_same(RAnd))
-        return RangeElement();
-      else {
-        RangeElement rv(*this);
-        if(r_pair.first != RAnd.r_pair.first)
-          rv.r_pair.second = RAnd.r_pair.first + min_unit<T>();
-        if(r_pair.second != RAnd.r_pair.second)
-          rv.r_pair.first = RAnd.r_pair.second - min_unit<T>();
-        return rv;
-      }
-    }
-
-    // normalize divide
-    virtual boost::tuple<RangeElement, RangeElement, RangeElement> 
-    divideBy(const RangeElement& r) const {
-      boost::tuple<RangeElement, RangeElement, RangeElement> rv;
-      if(!is_valid() || !r.is_valid()) {
-        boost::get<1>(rv) = combine(r);
-        return rv;
-      }
-
-      RangeElement RAnd = overlap(r);
-      if(RAnd.is_valid()) {
-        RangeElement ROr = combine(r);
-        boost::get<0>(rv) = RangeElement(ROr.first(), RAnd.first() +  min_unit<T>());
-        boost::get<1>(rv) = RAnd;
-        boost::get<2>(rv) = RangeElement(RAnd.second() -  min_unit<T>(), ROr.second());
-      } else {
-        if(less(r)) {
-          boost::get<0>(rv) = r;
-          boost::get<2>(rv) = *this;
-        } else {
-          boost::get<2>(rv) = r;
-          boost::get<0>(rv) = *this;          
-        }
-      }
-      return rv;
-    }
-
+    
     // stream out function
     virtual std::ostream& streamout(std::ostream& os) const{
       os << "[";
@@ -228,6 +123,185 @@ namespace CppRange {
     }
 
   };
+
+  /////////////////////////////////////////////
+  // implementation of class methods
+
+  // get the size of the range
+  template<class T> inline
+  T RangeElement<T>::size() const {
+    T bsize(r_pair.first - r_pair.second + min_unit<T>());
+    return !invalid && bsize > T(0) ? bsize : T(0);
+  }
+    
+  // check whether the range is empty
+    template<class T> inline
+  bool RangeElement<T>::empty() const {
+    return size_bit() == T(0);
+  }
+
+  // check whether a number is in this range
+  template<class T> inline
+  bool RangeElement<T>::in(T num) const {
+    return !empty() && !(num > upper) && !(num < lower());
+  }
+
+  // check this is a subset of r 
+  template<class T> inline
+  bool RangeElement<T>::subset(const RangeElement<T>& r) const {
+    if(empty())        return true;
+    else if(r.empty()) return false;
+    else               return !(r.upper() < upper()) && !(lower() < r.lower());      
+  }
+
+  // check this is a proper subset of r 
+  template<class T> inline
+  bool RangeElement<T>::proper_subset(const RangeElement<T>& r) const {
+    if(empty())        return !r.empty();
+    else if(r.empty()) return false;
+    else               return (r.upper() > upper()) && (lower() > r.lower());      
+  }
+
+  // check this is a superset of r
+  template<class T> inline
+  bool RangeElement<T>::superset(const RangeElement<T>& r) const {
+    if(r.empty())    return true;
+    else if(empty()) return false;
+    else             return !(upper() < r.upper()) && !(r.lower() < lower());      
+  }
+
+  // check this is a proper superset of r 
+  template<class T> inline
+  bool RangeElement<T>::proper_superset(const RangeElement<T>& r) const {
+    if(r.empty())    return !empty();
+    else if(empty()) return false;
+    else             return (upper() > r.upper()) && (r.lower() > lower());      
+  }
+
+  // check whether this range is a singleton range
+  template<class T> inline
+  bool RangeElement<T>::singleton() const {
+    return empty() || size() == min_unit<T>();
+  }  
+
+  // check whether this is equal with r
+  template<class T> inline
+  bool RangeElement<T>::equal(const RangeElement<T>& r) const {
+    if(empty())        return r.empty();
+    else if(r.empty()) return false;
+    else               return (upper() == r.upper()) && (r.lower() == lower());
+  }
+
+  // check whether r is adjacent to this range
+  template<class T> inline
+  bool RangeElement<T>:: connected(const RangeElement<T>& r) const {
+    if(empty() || r.empty()) return false;
+    else return 
+           (!(upper() + min_unit<T>() < r.lower()) 
+            && !(r.upper() + min_unit<T>() < lower()));
+  }
+
+  // weak order
+  template<class T> inline
+  bool RangeElement<T>::less(const RangeElement<T>& r) const {
+    if(empty() || r.empty())          return false;
+    else if(upper() < r.upper())      return true;
+    else if(upper() > r.upper())      return false;
+    else if(lower() > r.lower())      return true;
+    else if(lower() < r.lower())      return false;
+    else                              return false;
+  }
+  
+  // check whether r has a shared range with this range
+  template<class T> inline
+  bool RangeElement<T>::overlap(const RangeElement<T>& r) const {
+    if(empty() || r.empty()) return false;
+    else                     return !(upper() < r.lower()) && !(r.upper() < lower());
+  }
+
+  // check whether r does not have a shared range with this range
+  template<class T> inline
+  bool RangeElement<T>::disjoint(const RangeElement<T>& r) const {
+    if(empty() || r.empty()) return true;
+    else                     return (upper() < r.lower()) || (r.upper() < lower());
+  }
+  
+  // union to ranges
+  template<class T> inline
+  RangeElement<T> RangeElement<T>::combine(const RangeElement<T>& r) const {
+    if(empty())            return r;
+    else if(r.empty())     return *this;
+    else if(connected(r))  return hull(r); 
+    else                   return RangeElement<T>(); // or throw an exception
+  }
+  
+  // the minimal range to contain both this and r
+  template<class T> inline
+  RangeElement<T> RangeElement<T>::hull(const RangeElement<T>& r) const {
+    if(empty())            return r;
+    else if(r.empty())     return *this;
+    else 
+      return RangeElement<T>(std::max(upper(), r.upper()),
+                             std::min(lower(), r.lower()));
+  }
+  
+  // intersection
+  template<class T> inline
+  RangeElement<T> RangeElement<T>::intersection(const RangeElement<T>& r) const {
+    if(empty() || r.empty()) return RangeElement<T>();
+    else 
+      return RangeElement<T>(std::min(upper(), r.upper()),
+                             std::max(lower(), r.lower()));
+  }
+
+  // abstraction
+  template<class T> inline
+  RangeElement<T> RangeElement<T>::complement(const RangeElement<T>& r) const {
+    if(empty())        return RangeElement<T>();
+    else if(r.empty()) return *this;
+    
+    RangeElement<T> RAnd = intersection(r);
+    if(RAnd.empty())     return *this;
+    else if(equal(RAnd)) return RangeElement<T>();
+    else {
+      RangeElement<T> rv(*this);
+      if(upper() != RAnd.upper())
+        rv.lower() = RAnd.upper() + min_unit<T>();
+      if(lower() != RAnd.lower())
+        rv.upper() = RAnd.lower() - min_unit<T>();
+      return rv;
+    }
+  }
+
+  // normalize divide
+  template<class T> inline
+  boost::tuple<RangeElement<T>, RangeElement<T>, RangeElement<T> > 
+  RangeElement<T>::divide(const RangeElement<T>& r) const {
+    boost::tuple<RangeElement<T>, RangeElement<T>, RangeElement<T> > rv;
+    if(empty() || r.empty()) {
+      boost::get<1>(rv) = hull(r);
+      return rv;
+    }
+
+    RangeElement<T> RAnd = intersection(r);
+    if(RAnd.empty()) {
+      if(less(r)) {
+        boost::get<0>(rv) = r;
+        boost::get<2>(rv) = *this;
+      } else {
+        boost::get<2>(rv) = r;
+        boost::get<0>(rv) = *this;          
+      }
+    } else {
+      RangeElement<T> ROr = hull(r);
+      boost::get<0>(rv) = RangeElement<T>(ROr.upper(), RAnd.upper() +  min_unit<T>());
+      boost::get<1>(rv) = RAnd;
+      boost::get<2>(rv) = RangeElement<T>(RAnd.lower() -  min_unit<T>(), ROr.lower());
+    }
+    return rv;
+  }
+
+
 
   /////////////////////////////////////////////
   // overload operators

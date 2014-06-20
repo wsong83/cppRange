@@ -2,27 +2,28 @@
 * Support open and close ranges.
 * Add a detailed documents.
 * Add rational treasons in the document.
-* is_enclosed() -> in(), single number
-* is_valid() -> empty()
-* is_same() -> equal()
+* is_enclosed() -> in(), single number       																			Element
+* is_valid() -> empty()																														Element
+* is_same() -> equal()																														Element
 * Explain why less rather than enclose is chosen as partial order
 * is_enclosed() -> enclose(), range
-* is_adjacent() -> connected(), explain the case of [5,1] is connected to [10,6]
-* overlape() -> intersection(), explain why no exception is thrown
-* !is_overlap() -> disjoint()
-* is_overlap() -> overlap()
+* is_adjacent() -> connected(), explain the case of [5,1] is connected to [10,6]	Element
+* overlape() -> intersection(), explain why no exception is thrown								Element
+* !is_overlap() -> disjoint()																											Element
+* is_overlap() -> overlap()																												Element
 * allow throw an exception 
-* implement span()/hull() * prefer hull
-* implement singleton()
-* implement subset()
-* implement proper_subset()
-* implement superset()
-* implement proper_superset()
+* implement span()/hull() * prefer hull																						Element
+* implement singleton()																														Element
+* implement subset()																															Element
+* implement proper_subset()																												Element
+* implement superset()																														Element
+* implement proper_superset()																											Element
 * add support from string to range
 
 reference :
 Boost Interval Arithmetic Library  http://www.boost.org/doc/libs/1_55_0/libs/numeric/interval/doc/interval.htm
 Google Guava Libraries  http://code.google.com/p/guava-libraries/wiki/RangesExplained
 SUN C++ Interval Arithmetic Library http://docs.oracle.com/cd/E19422-01/819-3696/index.html
+http://en.wikipedia.org/wiki/Set_%28mathematics%29
 http://www.cs.utep.edu/interval-comp/intsoft.html
 Moore, R.E., Kearfott, R.B. and Cloud, M.J. Introduction to Interval Analysis. SIAM, 2009

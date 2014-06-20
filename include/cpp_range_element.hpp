@@ -108,20 +108,8 @@ namespace CppRange {
     virtual boost::tuple<RangeElement, RangeElement, RangeElement>
     divide(const RangeElement& r) const;                // standard divide/partition this and r
     
-    
-    // stream out function
-    virtual std::ostream& streamout(std::ostream& os) const{
-      os << "[";
-      if(is_valid()) {
-        if(r_pair.first == r_pair.second)
-          os << r_pair.first;
-        else 
-          os << r_pair.first << ":" << r_pair.second;
-      }
-      os << "]";
-      return os;
-    }
-
+    virtual std::ostream& streamout(std::ostream& os) const;
+                                                        // stream out the range
   };
 
   /////////////////////////////////////////////
@@ -137,13 +125,13 @@ namespace CppRange {
   // check whether the range is empty
     template<class T> inline
   bool RangeElement<T>::empty() const {
-    return size_bit() == T(0);
+    return size() == T(0);
   }
 
   // check whether a number is in this range
   template<class T> inline
   bool RangeElement<T>::in(T num) const {
-    return !empty() && !(num > upper) && !(num < lower());
+    return !empty() && !(num > upper()) && !(num < lower());
   }
 
   // check this is a subset of r 
@@ -301,52 +289,64 @@ namespace CppRange {
     return rv;
   }
 
+  // stream out the range
+  template<class T> inline
+  std::ostream& RangeElement<T>::streamout(std::ostream& os) const {
+    os << "[";
+    if(!empty()) {
+      os << upper();
+      if(upper() != lower()) 
+	os << ":" << lower();
+    }
+    os << "]";
+    return os;
+  }
 
 
   /////////////////////////////////////////////
   // overload operators
 
-  // rhs range is enclosed in lhs (not equal)
+  // rhs range is less than lhs
   template <class T>
   bool operator> (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return rhs.less(lhs);
   }
 
-  // rhs range is enclosed in lhs
+  // rhs range is less than or equal to lhs
   template <class T>
   bool operator>= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return rhs.less(lhs) || lhs.is_same(rhs);
+    return rhs.less(lhs) || lhs.equal(rhs);
   }
 
-  // lhs range is enclosed in rhs (not equal)
+  // lhs range is larger than rhs
   template <class T>
   bool operator< (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.less(rhs);
   }
 
-  // lhs range is enclosed in rhs
+  // lhs range is larger than or equal to rhs
   template <class T>
   bool operator<= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return lhs.less(rhs) || lhs.is_same(rhs);
+    return lhs.less(rhs) || lhs.equal(rhs);
   }
   
   // two ranges are equal
   template <class T>
   inline bool operator== (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return rhs.is_same(lhs);
+    return rhs.equal(lhs);
   }
 
   // two ranges are not equal
   template <class T>
   inline bool operator!= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return !rhs.is_same(lhs);
+    return !rhs.equal(lhs);
   }
 
   // return the overlapped range
   // function does not check the result's validation
   template <class T>  
   RangeElement<T> operator& (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return lhs.overlap(rhs);
+    return lhs.intersection(rhs);
   }
 
   // return the combined range
@@ -354,20 +354,6 @@ namespace CppRange {
   template <class T>  
   RangeElement<T> operator| (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
     return lhs.combine(rhs);
-  }
-
-  // return the reduced range
-  // function does not check the result's validation
-  template <class T>  
-  RangeElement<T> operator- (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return lhs.reduce(rhs);
-  }
-
-  // return the standard division (high, overlapped, low)
-  template <class T>
-  boost::tuple<RangeElement<T>, RangeElement<T>, RangeElement<T> > 
-  operator^ (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    return lhs.divideBy(rhs);
   }
 
   // standard out stream

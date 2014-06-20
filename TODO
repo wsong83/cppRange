@@ -6,7 +6,6 @@
 * is_valid() -> empty()																														Element
 * is_same() -> equal()																														Element
 * Explain why less rather than enclose is chosen as partial order
-* is_enclosed() -> enclose(), range
 * is_adjacent() -> connected(), explain the case of [5,1] is connected to [10,6]	Element
 * overlape() -> intersection(), explain why no exception is thrown								Element
 * !is_overlap() -> disjoint()																											Element

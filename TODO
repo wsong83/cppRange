@@ -1,12 +1,28 @@
-1. Support infinite.
-2. Support open and close ranges.
-3. Add a detailed documents.
-4. Add rational treasons in the document.
-5. is_enclosed() -> contain(), single number
-6. is_valid() -> empty()
-7. Explain why less rather than enclose is chosen as partial order
-8. is_enclosed() -> enclose(), range
-9. is_adjacent() -> isConnected(), explain the case of [5,1] is connected to [10,6]
-10. overlape() -> intersection(), explain why no exception is thrown
-11. allow throw an exception 
-12. implement span()
+* Support infinite.
+* Support open and close ranges.
+* Add a detailed documents.
+* Add rational treasons in the document.
+* is_enclosed() -> in(), single number
+* is_valid() -> empty()
+* is_same() -> equal()
+* Explain why less rather than enclose is chosen as partial order
+* is_enclosed() -> enclose(), range
+* is_adjacent() -> connected(), explain the case of [5,1] is connected to [10,6]
+* overlape() -> intersection(), explain why no exception is thrown
+* !is_overlap() -> disjoint()
+* is_overlap() -> overlap()
+* allow throw an exception 
+* implement span()/hull() * prefer hull
+* implement singleton()
+* implement subset()
+* implement proper_subset()
+* implement superset()
+* implement proper_superset()
+* add support from string to range
+
+reference :
+Boost Interval Arithmetic Library  http://www.boost.org/doc/libs/1_55_0/libs/numeric/interval/doc/interval.htm
+Google Guava Libraries  http://code.google.com/p/guava-libraries/wiki/RangesExplained
+SUN C++ Interval Arithmetic Library http://docs.oracle.com/cd/E19422-01/819-3696/index.html
+http://www.cs.utep.edu/interval-comp/intsoft.html
+Moore, R.E., Kearfott, R.B. and Cloud, M.J. Introduction to Interval Analysis. SIAM, 2009

@@ -48,7 +48,6 @@ namespace CppRange {
   template <class T>
   class RangeElement {
   private:
-    bool compressed;            // whether to compress single bit range when streamout
     bool invalid;               // set to true when constructed in default, but cleared whenever modified
     std::pair<T, T> r_pair;     // specific range expression
   public:
@@ -64,25 +63,22 @@ namespace CppRange {
 
     // default to construct an range with undefined value
     RangeElement()
-      : compressed(false), invalid(true) {}
+      : invalid(true) {}
 
     // single bit range
-    RangeElement(const T& r, bool compress = true)
-      : compressed(compress), invalid(false), r_pair(r, r) {}
+    RangeElement(const T& r)
+      : invalid(false), r_pair(r, r) {}
 
     // bit range
-    RangeElement(const T& rh, const T& rl, bool compress = true)
-      : compressed(compress), invalid(false), r_pair(rh, rl) {}
+    RangeElement(const T& rh, const T& rl)
+      : invalid(false), r_pair(rh, rl) {}
 
     // type conversion
     RangeElement(const RangeElement& r)
-      : compressed(r.compressed), invalid(r.invalid), r_pair(r.r_pair) {}
+      : invalid(r.invalid), r_pair(r.r_pair) {}
 
     //////////////////////////////////////////////
     // Helpers
-
-    // set compressed
-    virtual void set_compress(bool b) { compressed = b; }
 
     // size of bit
     virtual T size_bit() const {
@@ -155,8 +151,7 @@ namespace CppRange {
         return *this;
       else if(is_adjacent(r))
         return RangeElement(std::max(r_pair.first, r.r_pair.first),
-                            std::min(r_pair.second, r.r_pair.second),
-                            compressed);
+                            std::min(r_pair.second, r.r_pair.second));
       else
         return RangeElement();
     }
@@ -167,8 +162,7 @@ namespace CppRange {
         return RangeElement();
       else 
         return RangeElement(std::min(r_pair.first, r.r_pair.first),
-                            std::max(r_pair.second, r.r_pair.second),
-                            compressed);
+                            std::max(r_pair.second, r.r_pair.second));
     }
     
     // simple reduce
@@ -224,7 +218,7 @@ namespace CppRange {
     virtual std::ostream& streamout(std::ostream& os) const{
       os << "[";
       if(is_valid()) {
-        if(compressed && r_pair.first == r_pair.second)
+        if(r_pair.first == r_pair.second)
           os << r_pair.first;
         else 
           os << r_pair.first << ":" << r_pair.second;

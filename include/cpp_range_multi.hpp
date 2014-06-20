@@ -49,7 +49,6 @@ namespace CppRange {
   template <class T>
   class Range {
   private:
-    bool compressed;                       // whether to compress single bit range when streamout
     std::vector<RangeElement<T> > r_array; // the range array
 
   public:
@@ -57,49 +56,42 @@ namespace CppRange {
     // constructors
     
     // default constructor
-    Range() : compressed(true) {}
-
-    // Range with configuration
-    Range(bool compress) : compressed(compress) {}
+    Range() {}
 
     // type convert from different ranges
-    Range(const Range& r)
-      : compressed(r.compressed) {
+    Range(const Range& r) {
       r_array.resize(r.r_array.size());
       for(unsigned int i=0; i<r_array.size(); i++)
         r_array[i] = r.r_array[i];
     }
 
     // construct from a list of RangeElements
-    explicit Range(const std::list<RangeElement<T> >& l, bool compress = true) 
-      : compressed(compress) {
+    explicit Range(const std::list<RangeElement<T> >& l) {
       r_array.resize(l.size());
       unsigned int i = 0;
       BOOST_FOREACH(const RangeElement<T>& r, l)
         r_array[i++]=r;
     }
     // construct from a list of RangeElements
-    explicit Range(const std::vector<RangeElement<T> >& l, bool compress = true)
-      : compressed(compress), r_array(l) {}
+    explicit Range(const std::vector<RangeElement<T> >& l)
+      : r_array(l) {}
 
     // construct from a list of value pairs
-    explicit Range(const std::list<std::pair<T,T> >& l, bool compress = true) 
-      : compressed(compress) {
+    explicit Range(const std::list<std::pair<T,T> >& l) {
       r_array.resize(l.size());
       unsigned int i = 0;
       typedef std::pair<T,T> local_range_pair;
       BOOST_FOREACH(const local_range_pair& r, l)
-        r_array[i++]=RangeElement<T>(r.first, r.second, compress);
+        r_array[i++]=RangeElement<T>(r.first, r.second);
     }
 
     // construct from a list of RangeElements
-    explicit Range(const std::vector<std::pair<T,T> >& l, bool compress = true)
-      : compressed(compress) {
+    explicit Range(const std::vector<std::pair<T,T> >& l) {
       r_array.resize(l.size());
       unsigned int i = 0;
       typedef std::pair<T,T> local_range_pair;
       BOOST_FOREACH(const local_range_pair& r, l)
-        r_array[i++]=RangeElement<T>(r.first, r.second, compress);   
+        r_array[i++]=RangeElement<T>(r.first, r.second);   
     }
 
     //////////////////////////////////////////////
@@ -114,9 +106,6 @@ namespace CppRange {
 
     //////////////////////////////////////////////
     // Helpers
-
-    // set compressed
-    void set_compress(bool b) { compressed = b; }
 
     // size of dimension
     unsigned int size_dimension() const {
@@ -137,13 +126,11 @@ namespace CppRange {
     // this method is very expernsive, do not use if possible
     void push_front(const RangeElement<T>& r) {
       r_array.insert(0, r);
-      r_array[0].set_compress(compressed);
     }
 
     // add a lower dimension
     void push_back(const RangeElement<T>& r) {
       r_array.push_back(r);
-      r_array[r_array.size()-1].set_compress(compressed);
     }
 
     void pop_back() {
@@ -182,7 +169,7 @@ namespace CppRange {
 
     // simple combine without check
     Range combine(const Range& r) const {
-      Range rv(compressed);
+      Range rv;
       if(!is_valid() || !r.is_valid())
         return rv;
       if(r_array.size() != r.r_array.size())
@@ -195,7 +182,7 @@ namespace CppRange {
 
     // simple overlap without check
     Range overlap(const Range& r) const {
-      Range rv(compressed);
+      Range rv;
       if(!is_valid() || !r.is_valid())
         return rv;
       if(r_array.size() != r.r_array.size())
@@ -208,7 +195,7 @@ namespace CppRange {
 
     // simple reduce without check
     Range reduce(const Range& r) const {
-      Range rv(compressed);
+      Range rv;
       if(!is_valid() || !r.is_valid())
         return rv;
       if(r_array.size() != r.r_array.size())
@@ -234,7 +221,7 @@ namespace CppRange {
       if(!is_valid() || !r.is_valid())
         return boost::tuple<Range, Range, Range>();
 
-      Range rH(compressed), rM(compressed), rL(compressed);
+      Range rH, rM, rL;
       rH.r_array.resize(r_array.size());
       rM.r_array.resize(r_array.size());
       rL.r_array.resize(r_array.size());

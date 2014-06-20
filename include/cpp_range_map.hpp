@@ -55,15 +55,15 @@ namespace CppRange {
       : level(0) {}
 
     // single bit range
-    RangeMap(const T& r, bool compress = true) 
+    RangeMap(const T& r) 
       : level(1) {
-      child.push_back(RangeMapBase<T>(r, compress));
+      child.push_back(RangeMapBase<T>(r));
     }
 
     // bit range
-    RangeMap(const T& rh, const T& rl, bool compress = true) 
+    RangeMap(const T& rh, const T& rl) 
       : level(1) {
-      child.push_back(RangeMapBase<T>(rh, rl, compress));
+      child.push_back(RangeMapBase<T>(rh, rl));
     }
 
     // type conversion
@@ -148,10 +148,6 @@ namespace CppRange {
 
     unsigned int get_level() const {
       return level;
-    }
-
-    virtual void set_compress(bool compress) {
-      RangeMapBase<T>::set_compress(child);
     }
     
     // valid range expression

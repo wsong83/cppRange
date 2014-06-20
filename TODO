@@ -1,0 +1,12 @@
+1. Support infinite.
+2. Support open and close ranges.
+3. Add a detailed documents.
+4. Add rational treasons in the document.
+5. is_enclosed() -> contain(), single number
+6. is_valid() -> empty()
+7. Explain why less rather than enclose is chosen as partial order
+8. is_enclosed() -> enclose(), range
+9. is_adjacent() -> isConnected(), explain the case of [5,1] is connected to [10,6]
+10. overlape() -> intersection(), explain why no exception is thrown
+11. allow throw an exception 
+12. implement span()

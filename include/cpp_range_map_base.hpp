@@ -56,12 +56,12 @@ namespace CppRange {
       : RangeElement<T>(), level(0) {}
 
     // single bit range
-    RangeMapBase(const T& r, bool compress = true)
-      : RangeElement<T>(r, compress), level(1) {}
+    RangeMapBase(const T& r)
+      : RangeElement<T>(r), level(1) {}
 
     // bit range
-    RangeMapBase(const T& rh, const T& rl, bool compress = true)
-      : RangeElement<T>(rh, rl, compress), level(1) {}
+    RangeMapBase(const T& rh, const T& rl)
+      : RangeElement<T>(rh, rl), level(1) {}
 
     // type conversion
     explicit RangeMapBase(const RangeElement<T>& r)
@@ -135,11 +135,6 @@ namespace CppRange {
       return level;
     }
     
-    virtual void set_compress(bool compress) {
-      RangeElement<T>::set_compress(compress);
-      set_compress(child);
-    }
-
     // size of bit
     virtual T size_bit() const {
       return size_bit(child) * RangeElement<T>::size_bit();
@@ -361,12 +356,6 @@ namespace CppRange {
         rlist.insert(lit, mr);
 
       normalize(rlist);
-    }
-
-    // set compress state for child list
-    static void set_compress(std::list<RangeMapBase>& rlist, bool compress) {
-      BOOST_FOREACH(RangeMapBase& b, rlist)
-        b.set_compress(compress);      
     }
 
     // claculat the bit size

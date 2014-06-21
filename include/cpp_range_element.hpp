@@ -192,7 +192,8 @@ namespace CppRange {
   // weak order
   template<class T> inline
   bool RangeElement<T>::less(const RangeElement<T>& r) const {
-    if(empty() || r.empty())          return false;
+    if(empty())                       return !r.empty();
+    else if(r.empty())                return false;
     else if(upper() < r.upper())      return true;
     else if(upper() > r.upper())      return false;
     else if(lower() > r.lower())      return true;

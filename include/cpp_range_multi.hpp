@@ -49,12 +49,68 @@ namespace CppRange {
   template <class T>
   class Range {
   private:
-    std::vector<RangeElement<T> > r_array; // the range array
+    std::vector<RangeElement<T> > r_array;              // the range array
 
   public:
     //////////////////////////////////////////////
     // constructors
     
+    Range();
+    Range(const Range&);
+    explicit Range(const std::list<RangeElement<T> >&); // construct from a list of 
+                                                        // RangeElements
+    explicit Range(const std::vector<RangeElement<T> >&);
+                                                        // construct from a vector of 
+                                                        // RangeElements
+    explicit Range(const std::list<std::pair<T,T> >&);  // construct from a list of
+                                                        // raw range pairs
+    explicit Range(const std::vector<std::pair<T,T> >&);
+                                                        // construct from a vector of 
+                                                        // raw range pairs
+
+    //////////////////////////////////////////////
+    // helpers
+
+    // data accesser
+    RangeElement<T>& operator[] (unsigned int);         // access a certain dimension
+                                                        // start from the highest (left)
+    const RangeElement<T>& operator[] (unsigned int) const;
+
+    unsigned int dimension() const;                     // the number of dimensions
+    T size() const;                                     // the size of the range
+    void add_upper(const RangeElement<T>&);             // add a higher dimension, expensive
+                                                        // do not use whenever possible
+    void add_lower(const RangeElement<T>&);             // add a lower dimension
+    void remove_upper();                                // remove a higher dimension
+    void remove_lower();                                // remove a lower dimension
+    virtual bool empty() const;		       		// ? this is an empty range 
+    virtual bool subset(const Range&) const;		// ? this is a subset of r
+    virtual bool proper_subset( const Range&) const;	// ? this is a proper subset of r
+    virtual bool superset(const Range&) const;		// ? this is a superset of r
+    virtual bool proper_superset( const Range&) const;	// ? this is a proper superset of r
+    virtual bool singleton() const;                     // ? this is a singleton range 
+    virtual bool equal(const Range& r) const;           // ? this == r 
+    virtual bool connected(const Range& r) const;       // ? this and r are connected
+    virtual bool less(const Range& r) const;            // weak order compare
+    virtual bool overlap(const Range& r) const;         // this & r != []
+    virtual bool disjoint(const Range& r) const;        // this & r == []
+    virtual Range combine(const Range& r) const;        // get the union of this and r
+    virtual Range hull(const Range& r) const;           // get the minimal superset of the union
+                                                        // of this and r
+    virtual Range intersection(const Range& r) const;   // get the intersection of this and r
+    virtual Range complement(const Range& r) const;     // substract r from this range
+    virtual boost::tuple<Range, Range, Range>
+    divide(const Range& r) const;                       // standard divide/partition this and r
+    
+    virtual std::ostream& streamout(std::ostream& os) const;
+                                                        // stream out the range
+
+  protected:
+    bool comparable(const Range& r) const;              // ? this and r can be compared 
+    bool operable(const Range& r) const;		// ? this and r are operable
+                                                        // only one dimension is not equal
+  };
+
     // default constructor
     Range() {}
 

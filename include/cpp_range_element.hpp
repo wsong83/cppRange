@@ -48,37 +48,26 @@ namespace CppRange {
   template <class T>
   class RangeElement {
   private:
-    bool invalid;               // set to true when constructed in default, but cleared whenever modified
+    bool initialized;           // false if constructed without range value
     std::pair<T, T> r_pair;     // specific range expression
-  public:
-    //////////////////////////////////////////////
-    // data accessers
-    T& upper() { invalid = false; return r_pair.first;}
-    const T& upper() const { return r_pair.first;}
-    T& lower() { invalid = false; return r_pair.second;}
-    const T& lower() const { return r_pair.second;}
 
+  public:
     //////////////////////////////////////////////
     // constructors
 
-    // default to construct an range with undefined value
-    RangeElement()
-      : invalid(true) {}
-
-    // single bit range
-    RangeElement(const T& r)
-      : invalid(false), r_pair(r, r) {}
-
-    // bit range
-    RangeElement(const T& rh, const T& rl)
-      : invalid(false), r_pair(rh, rl) {}
-
-    // type conversion
-    RangeElement(const RangeElement& r)
-      : invalid(r.invalid), r_pair(r.r_pair) {}
+    RangeElement();
+    RangeElement(const T&);                             // single bit range
+    RangeElement(const T& upper_bound, const T& lower_bound);
+    RangeElement(const RangeElement&);
 
     //////////////////////////////////////////////
     // Helpers
+
+    // data accessers
+    void set_upper(const T&);	                        // set a new upper bound 
+    const T& upper() const;				// get the upper bound
+    void set_lower(const T&);				// set a new lower bound
+    const T& lower() const;				// get the lower bound
 
     virtual T size() const;                             // get the size of the range
     virtual bool empty() const;                         // ? this is empty
@@ -115,11 +104,58 @@ namespace CppRange {
   /////////////////////////////////////////////
   // implementation of class methods
 
+  // constructors
+  
+  // default
+  template<class T> inline
+  RangeElement<T>::RangeElement()
+    : initialized(false), r_pair(T(0), T(0)) {}
+
+  // single bit range
+  template<class T> inline
+  RangeElement<T>::RangeElement(const T& r)
+    : initialized(true), r_pair(r, r) {}
+
+  // bit range
+  template<class T> inline
+  RangeElement<T>::RangeElement(const T& rh, const T& rl)
+    : initialized(true), r_pair(rh, rl) {}
+
+  // type conversion
+  template<class T> inline
+  RangeElement<T>::RangeElement(const RangeElement& r)
+    : initialized(r.initialized), r_pair(r.r_pair) {}
+
+  // helpers
+
+  // bound accessor
+  template<class T> inline
+  void RangeElement<T>::set_upper(T& upper_bound) {
+    initialized = true; 
+    r_pair.first = upper_bound;
+  }
+  
+  template<class T> inline
+  const T& RangeElement<T>::upper() const { 
+    return r_pair.first;
+  }
+  
+  template<class T> inline
+  void RangeElement<T>::lower(T& lower_bound) { 
+    initialized = true; 
+    r_pair.second = lower_bound;
+  }
+  
+  template<class T> inline
+  const T& RangeElement<T>::lower() const { 
+    return r_pair.second;
+  }
+
   // get the size of the range
   template<class T> inline
   T RangeElement<T>::size() const {
     T bsize(r_pair.first - r_pair.second + min_unit<T>());
-    return !invalid && bsize > T(0) ? bsize : T(0);
+    return initialized && bsize > T(0) ? bsize : T(0);
   }
     
   // check whether the range is empty

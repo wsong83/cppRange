@@ -234,67 +234,67 @@ namespace CppRange {
   // check whether this is a subset of r
   templat<class T> inline
   bool Range<T>::subset(const Range<T>& r) const {
-    if(empty())        return true;
-    else if(r.empty()) return false;
-    else if(comparable(r)) {
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(!r_array[i].subset(r[i])) 
-          return false;
-      }
-      return true;
-    } else return false;
+    if(empty()) return true;
+    if(r.empty()) return false;
+    if(!comparable()) return false; // or throw an exception
+
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].subset(r[i])) 
+        return false;
+    }
+    return true;
   }
 
   // check whether this is a proper subset of r
   templat<class T> inline
-  bool Range<T>::subset(const Range<T>& r) const {
-    if(empty())        return !r.empty();
-    else if(r.empty()) return false;
-    else if(comparable(r)) {
-      bool proper = false;
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(r_array[i].same(r[i])) 
-          continue;
-        else if(r_array[i].proper_subset(r[i]))
-          proper = true;
-        else
-          return false;
-      }
-      return proper;
-    } else return false;
+  bool Range<T>::proper_subset(const Range<T>& r) const {
+    if(empty()) return !r.empty();
+    if(r.empty()) return false;
+    if(!comparable(r)) return false; // or throw an exception
+    
+    bool proper = false;
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(r_array[i].same(r[i])) 
+        continue;
+      else if(r_array[i].proper_subset(r[i]))
+        proper = true;
+      else
+        return false;
+    }
+    return proper;
   }
 
   // check whether this is a superset of r
   templat<class T> inline
-  bool Range<T>::subset(const Range<T>& r) const {
-    if(r.empty())    return true;
-    else if(empty()) return false;
-    else if(comparable(r)) {
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(!r_array[i].superset(r[i])) 
-          return false;
-      }
-      return true;
-    } else return false;
+  bool Range<T>::superset(const Range<T>& r) const {
+    if(r.empty()) return true;
+    if(empty()) return false;
+    if(!comparable(r)) return false; // or throw an exception
+
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].superset(r[i])) 
+        return false;
+    }
+    return true;
   }
 
   // check whether this is a proper superset of r
   templat<class T> inline
-  bool Range<T>::subset(const Range<T>& r) const {
-    if(r.empty())    return !empty();
-    else if(empty()) return false;
-    else if(comparable(r)) {
-      bool proper = false;
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(r_array[i].same(r[i])) 
-          continue;
-        else if(r_array[i].proper_superset(r[i]))
-          proper = true;
-        else
-          return false;
-      }
-      return proper;
-    } else return false;
+  bool Range<T>::proper_superset(const Range<T>& r) const {
+    if(r.empty()) return !empty();
+    if(empty()) return false;
+    if(!comparable(r)) return false; // or throw an exception
+
+    bool proper = false;
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(r_array[i].same(r[i])) 
+        continue;
+      else if(r_array[i].proper_superset(r[i]))
+        proper = true;
+      else
+        return false;
+    }
+    return proper;
   }
 
   // check whether this range is a singleton range
@@ -305,104 +305,170 @@ namespace CppRange {
   
   // check whether r is equal with this range
   template<class T> inline
-  bool Range<T>::is_same(const Range<T>& r) const {
+  bool Range<T>::equal(const Range<T>& r) const {
     if(empty()) return r.empty();
-    else if(comparable(r)) {
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(!r_array[i].same(r[i]))
-          return false;
-      }
-      return true;
-    } else return false;
+    if(!comparable(r)) return false; // or throw an exception
+
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].same(r.r_array[i]))
+        return false;
+    }
+    return true;
   }
 
-  /////////////////////////////////////////////////////
+  // check whether the range and this range are adjacent
+  template<class T> inline
+  bool Range<T>::connected(const Range<T>& r) const {
+    if(empty() || r.empty()) return false;
+    if(comparable(r)) return false;
+    
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].same(r.r_array[i])) {
+        if(!r_array[i].connected(r.r_array[i]))
+          return false;
+      }
+    }
+    return true;
+  }    
 
+  // weak order
+  template<class T> inline
+  bool Range<T>::less(const Range& r) const {
+    if(empty()) return !r.empty();
+    if(r.empty()) return false;
+    if(!comparable(r)) return false; // or throw an exception
+    
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].same(r.r_array[i]))
+        return r_array[i].less(r.r_array[i]);
+    }
+    return false;               // the two ranges are equal
+  }
 
+  // whether this and r has non-empty intersection
+  template<class T> inline
+  bool Range<T>::overlap(const Range<T>& r) const {
+    if(empty() || r.empty())  return false;
+    if(!comparable()) return false; // or throw an exception
 
-    // simple combine without check
-    Range combine(const Range& r) const {
-      Range rv;
-      if(!is_valid() || !r.is_valid())
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].overlap(r.r_array[i]))
+        return false;
+    }
+    return true;
+  }
+
+  // whether this and r have no shared range
+  template<class T> inline
+  bool Range<T>::disjoint(const Range<T>& r) const {
+    if(empty() || r.empty())  return true;
+    if(!comparable()) return false; // or throw an exception
+
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].overlap(r.r_array[i]))
+        return true;
+    }
+    return false;
+  }
+
+  // combine two ranges
+  template<class T> inline
+  Range<T> Range<T>::combine(const Range<T>& r) const {
+    if(empty()) return r;
+    if(r.empty()) return *this;
+    if(!comparable(r)) return Range<T>(); // or throw an exception
+
+    Range<T> rv;
+    rv.r_array.resize(r_array.size());
+    for(unsigned int i=0; i<r_array.size(); i++)
+      rv.r_array[i] = r_array[i].combine(r.r_array[i]);
+    return rv;
+  }
+
+  // get the minimal range contain the two ranges
+  template<class T> inline
+  Range<T> Range<T>::hull(const Range<T>& r) const {
+    if(empty()) return r;
+    if(r.empty()) return *this;
+    if(!comparable(r)) return Range<T>(); // or throw an exception
+
+    Range<T> rv;
+    rv.r_array.resize(r_array.size());
+    for(unsigned int i=0; i<r_array.size(); i++)
+      rv.r_array[i] = r_array[i].hull(r.r_array[i]);
+    return rv;
+  }
+
+  // get the shared range
+  template<class T> inline
+  Range<T> Range<T>::intersection(const Range<T>& r) const {
+    if(empty() || r.empty()) return Range<T>();
+    if(!comparable(r)) return Range<T>(); // or throw an exception
+
+    Range<T> rv;
+    rv.r_array.resize(r_array.size());
+    for(unsigned int i=0; i<r_array.size(); i++)
+      rv.r_array[i] = r_array[i].intersection(r.r_array[i]);
+    return rv;
+  }
+
+  //substraction
+  template<class T> inline
+  Range<T> Range<T>::complement(const Range<T>& r) const {
+    if(empty()) return Range<T>();
+    if(r.empty()) return *this;
+    if(!operable(r)) return Range<T>(); // or throw an exception
+
+    Range<T> rv(r);
+    rv.r_array.resize(r_array.size());
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].equal(r.r_array[i])) {
+        rv.r_array[i] = r_array[i].complement(r.r_array[i]);
         return rv;
-      if(r_array.size() != r.r_array.size())
-        return rv;
-      rv.r_array.resize(r_array.size());
-      for(unsigned int i=0; i<r_array.size(); i++)
-        rv.r_array[i] = r_array[i] | r.r_array[i];
+      }
+    }
+    
+    return Range<T>();          // the two ranges are equal
+  }
+
+  //substraction
+  template<class T> inline
+  boost::tuple<Range<T>, Range<T>, Range<T> >
+  Range<T>::divide(const Range<T>& r) const {
+    boost::tuple<Range<T>, Range<T>, Range<T> > rv;
+    if(empty() || r.empty()) {
+      boost::get<1>(rv) = hull(r);
       return rv;
     }
+    
+    if(!operable(r)) return rv; // or throw an exception
 
-    // simple overlap without check
-    Range overlap(const Range& r) const {
-      Range rv;
-      if(!is_valid() || !r.is_valid())
-        return rv;
-      if(r_array.size() != r.r_array.size())
-        return rv;
-      rv.r_array.resize(r_array.size());
-      for(unsigned int i=0; i<r_array.size(); i++) 
-        rv.r_array[i] = r_array[i] & r.r_array[i];
-      return rv;
-    }
-
-    // simple reduce without check
-    Range reduce(const Range& r) const {
-      Range rv;
-      if(!is_valid() || !r.is_valid())
-        return rv;
-      if(r_array.size() != r.r_array.size())
-        return rv;
-      rv.r_array.resize(r_array.size());
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(r_array[i] != r.r_array[i])
-          rv.r_array[i] = r_array[i] - r.r_array[i];
+    boost::get<0>(rv) = r;
+    boost::get<1>(rv) = r;
+    boost::get<2>(rv) = r;
+    
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].equal(r.r_array[i])) {
+        RangeElement<T> rH, rM, rL;
+        boost::tie(rH, rM, rL) = r_array[i].divide(r.r_array[i]);
+        boost::get<0>(rv).r_array[i] = rH;
+        if(rM.empty())
+          boost::get<1>(rv) = Range<T>();
         else
-          rv.r_array[i] = r_array[i];
+          boost::get<1>(rv) = rM;
+        boost::get<2>(rv).r_array[i] = rL;
+       return rv;
       }
-
-      // if same, means this and r are equal, the reduced one is none
-      if(rv == *this) 
-        return Range();
-      else 
-        return rv;
     }
 
-    // normalize divide
-    boost::tuple<Range, Range, Range> 
-    divideBy(const Range& r) const {
-      if(!is_valid() || !r.is_valid())
-        return boost::tuple<Range, Range, Range>();
+    // the two ranges are equal
+    boost::get<0>(rv) = Range<T>();
+    boost::get<1>(rv) = r;
+    boost::get<2>(rv) = Range<T>();    
+  }
 
-      Range rH, rM, rL;
-      rH.r_array.resize(r_array.size());
-      rM.r_array.resize(r_array.size());
-      rL.r_array.resize(r_array.size());
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(r_array[i] != r.r_array[i])
-          boost::tie(rH.r_array[i], rM.r_array[i], rL.r_array[i]) = 
-            r_array[i].divideBy(r.r_array[i]);
-        else {
-          rH.r_array[i] = r_array[i];
-          rM.r_array[i] = r_array[i];
-          rL.r_array[i] = r_array[i];
-        }
-      }
-      return boost::tuple<Range, Range, Range>(rH, rM, rL);
-    }
+  ////////////////////////
 
-    // weak order
-    bool less(const Range& r) const {
-      if(!is_valid() || !r.is_valid())
-        return false;
-      if(r_array.size() != r.r_array.size())
-        return false;
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(r_array[i] != r.r_array[i])
-          return r_array[i].less(r.r_array[i]);
-      }
-      return false;
-    }
 
     // check whether the ranges can be compared
     // indicating they have the same number of dimensions
@@ -426,21 +492,6 @@ namespace CppRange {
       if(cnt > 1) return false;
       else return true;
     }
-
-    // check whether the range and this range are adjacent
-    bool is_adjacent(const Range& r) const {
-      if(!is_operable(r)) return false;
-      for(unsigned int i=0; i<r_array.size(); i++) {
-        if(r_array[i] != r.r_array[i]) {
-          if(r_array[i].is_adjacent(r.r_array[i]))
-            return true;
-          else
-            return false;
-        }
-      }
-      
-      return true;
-    }    
 
     // stream out function
     std::ostream& streamout(std::ostream& os) const{

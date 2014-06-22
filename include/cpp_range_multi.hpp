@@ -55,8 +55,7 @@ namespace CppRange {
     //////////////////////////////////////////////
     // constructors
     
-    Range();
-    Range(const Range&);
+    Range() {}
     explicit Range(const std::list<RangeElement<T> >&); // construct from a list of 
                                                         // RangeElements
     explicit Range(const std::vector<RangeElement<T> >&);
@@ -81,13 +80,16 @@ namespace CppRange {
     void add_upper(const RangeElement<T>&);             // add a higher dimension, expensive
                                                         // do not use whenever possible
     void add_lower(const RangeElement<T>&);             // add a lower dimension
-    void remove_upper();                                // remove a higher dimension
-    void remove_lower();                                // remove a lower dimension
-    virtual bool empty() const;		       		// ? this is an empty range 
-    virtual bool subset(const Range&) const;		// ? this is a subset of r
-    virtual bool proper_subset( const Range&) const;	// ? this is a proper subset of r
-    virtual bool superset(const Range&) const;		// ? this is a superset of r
-    virtual bool proper_superset( const Range&) const;	// ? this is a proper superset of r
+    void add_dimension(const RangeElement<T>&, unsigned int pos);
+                                                        // add a dimension at position 'pos'
+    void remove_upper();                                // remove the highest dimension
+    void remove_lower();                                // remove the lowest dimension
+    void remove_dimension(unsigned int pos);            // remove a dimension at position 'pos'
+    virtual bool empty() const;                         // ? this is an empty range 
+    virtual bool subset(const Range&) const;            // ? this is a subset of r
+    virtual bool proper_subset( const Range&) const;    // ? this is a proper subset of r
+    virtual bool superset(const Range&) const;          // ? this is a superset of r
+    virtual bool proper_superset( const Range&) const;  // ? this is a proper superset of r
     virtual bool singleton() const;                     // ? this is a singleton range 
     virtual bool equal(const Range& r) const;           // ? this == r 
     virtual bool connected(const Range& r) const;       // ? this and r are connected
@@ -107,121 +109,216 @@ namespace CppRange {
 
   protected:
     bool comparable(const Range& r) const;              // ? this and r can be compared 
-    bool operable(const Range& r) const;		// ? this and r are operable
+    bool operable(const Range& r) const;                // ? this and r are operable
                                                         // only one dimension is not equal
   };
 
-    // default constructor
-    Range() {}
+  /////////////////////////////////////////////
+  // implementation of class methods
 
-    // type convert from different ranges
-    Range(const Range& r) {
-      r_array.resize(r.r_array.size());
-      for(unsigned int i=0; i<r_array.size(); i++)
-        r_array[i] = r.r_array[i];
-    }
+  // constructors
 
-    // construct from a list of RangeElements
-    explicit Range(const std::list<RangeElement<T> >& l) {
-      r_array.resize(l.size());
-      unsigned int i = 0;
-      BOOST_FOREACH(const RangeElement<T>& r, l)
-        r_array[i++]=r;
-    }
-    // construct from a list of RangeElements
-    explicit Range(const std::vector<RangeElement<T> >& l)
-      : r_array(l) {}
+  // construct from a list of RangeElements
+  templat<class T> inline
+  explicit Range<T>::Range(const std::list<RangeElement<T> >& l)
+    : r_array(std::vector<RangeElement<T> >(l.begin(), l.end())) {} 
 
-    // construct from a list of value pairs
-    explicit Range(const std::list<std::pair<T,T> >& l) {
-      r_array.resize(l.size());
-      unsigned int i = 0;
-      typedef std::pair<T,T> local_range_pair;
-      BOOST_FOREACH(const local_range_pair& r, l)
-        r_array[i++]=RangeElement<T>(r.first, r.second);
-    }
+  // construct from a vector of RangeElements
+  templat<class T> inline
+  explicit Range<T>::Range(const std::vector<RangeElement<T> >& l)
+    : r_array(l) {}
 
-    // construct from a list of RangeElements
-    explicit Range(const std::vector<std::pair<T,T> >& l) {
-      r_array.resize(l.size());
-      unsigned int i = 0;
-      typedef std::pair<T,T> local_range_pair;
-      BOOST_FOREACH(const local_range_pair& r, l)
-        r_array[i++]=RangeElement<T>(r.first, r.second);   
-    }
+  // construct from a list of raw range pairs
+  templat<class T> inline
+  explicit Range<T>::Range(const std::list<std::pair<T,T> >& l) {
+    r_array.resize(l.size());
+    unsigned int i = 0;
+    typedef std::pair<T,T> local_range_pair;
+    BOOST_FOREACH(const local_range_pair& r, l)
+      r_array[i++]=RangeElement<T>(r.first, r.second);
+  }
 
-    //////////////////////////////////////////////
-    // accesser
-    RangeElement<T>& operator[] (unsigned int index) {
-      return r_array.at(index);
-    }
+  // construct from a vector of raw range pairs
+  templat<class T> inline
+  explicit Range<T>::Range(const std::vector<std::pair<T,T> >& l) {
+    r_array.resize(l.size());
+    unsigned int i = 0;
+    typedef std::pair<T,T> local_range_pair;
+    BOOST_FOREACH(const local_range_pair& r, l)
+      r_array[i++]=RangeElement<T>(r.first, r.second);   
+  }
 
-    const RangeElement<T>& operator[] (unsigned int index) const {
-      return r_array.at(index);
-    }
+  //////////////////////////////////////////////
+  // data accesser
+  templat<class T> inline
+  RangeElement<T>& Range<T>::operator[] (unsigned int index) {
+    return r_array.at(index);
+  }
+  
+  templat<class T> inline
+  const RangeElement<T>& Range<T>::operator[] (unsigned int index) const {
+    return r_array.at(index);
+  }
+  
+  //////////////////////////////////////////////
+  // Helpers
+  
+  // size of dimension
+  templat<class T> inline
+  unsigned int Range<T>::dimension() const {
+    return r_array.size();
+  }
 
-    //////////////////////////////////////////////
-    // Helpers
+  // size of bits
+  templat<class T> inline
+  T Range<T>::size() const {
+    if(empty()) return T(0);
+    
+    T rv(1);
+    for(unsigned int i=0; i<r_array.size(); i++)
+      rv = rv * r_array[i].size();
+    return rv;
+  }
+  
+  // add a higher dimension
+  // this method is very expernsive, do not use if possible
+  templat<class T> inline
+  void Range<T>::add_upper(const RangeElement<T>& r) {
+    r_array.insert(r_array.begin(), r);
+  }
 
-    // size of dimension
-    unsigned int size_dimension() const {
-      return r_array.size();
-    }
+  // add a lower dimension
+  templat<class T> inline
+  void Range<T>::add_lower(const RangeElement<T>& r) {
+    r_array.push_back(r);
+  }
 
-    // size of bits
-    T size_bit() const {
-      if(!is_valid()) return T(0);
+  // add a dimension
+  // this method is very expernsive, do not use if possible
+  templat<class T> inline
+  void Range<T>::add_dimension(const RangeElement<T>& r, unsigned int pos) {
+    // ** need to check pos < size ?
+    r_array.insert(r_array.begin() + pos, r);
+  }
+   
+  // remove the highest dimension
+  // this method is very expernsive, do not use if possible
+  templat<class T> inline
+  void Range<T>::remove_upper(const RangeElement<T>& r) {
+    r_array.erase(r_array.begin(), r);
+  }
 
-      T rv(1);
-      for(unsigned int i=0; i<r_array.size(); i++)
-        rv = rv * r_array[i].size();
-      return rv;
-    }
+  // remove the lowest dimension
+  templat<class T> inline
+  void Range<T>::remove_lower(const RangeElement<T>& r) {
+    r_array.pop_back(r);
+  }
 
-    // add a higher dimension
-    // this method is very expernsive, do not use if possible
-    void push_front(const RangeElement<T>& r) {
-      r_array.insert(0, r);
-    }
+  // remove a dimension
+  // this method is very expernsive, do not use if possible
+  templat<class T> inline
+  void Range<T>::remove_dimension(const RangeElement<T>& r, unsigned int pos) {
+    // ** need to check pos < size ?
+    r_array.erase(r_array.begin() + pos, r);
+  }
 
-    // add a lower dimension
-    void push_back(const RangeElement<T>& r) {
-      r_array.push_back(r);
-    }
+  // check whether the range expression is empty
+  templat<class T> inline
+  bool Range<T>::empty() const {
+    if(r_array.empty()) return true;
+    for(unsigned int i=0; i<r_array.size(); i++) 
+      if(r_array[i].empty()) return true;
+    return false;
+  }
 
-    void pop_back() {
-      r_array.pop_back();
-    }
-
-    // check whether the range expression is valid
-    bool is_valid() const {
-      if(r_array.empty()) return false;
-      for(unsigned int i=0; i<r_array.size(); i++) 
-        if(!r_array[i].is_valid()) return false;
+  // check whether this is a subset of r
+  templat<class T> inline
+  bool Range<T>::subset(const Range<T>& r) const {
+    if(empty())        return true;
+    else if(r.empty()) return false;
+    else if(comparable(r)) {
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(!r_array[i].subset(r[i])) 
+          return false;
+      }
       return true;
-    }
+    } else return false;
+  }
 
-    // check whether range r is enclosed in this range 
-    bool is_enclosed(const Range& r) const {
-      if(!is_valid() || !r.is_valid())
-        return false;
-      if(r_array.size() != r.r_array.size()) 
-        return false;
-      for(unsigned int i=0; i<r_array.size(); i++)
-        if(!(r_array[i] >= r.r_array[i])) return false;
-      return true;
-    }
+  // check whether this is a proper subset of r
+  templat<class T> inline
+  bool Range<T>::subset(const Range<T>& r) const {
+    if(empty())        return !r.empty();
+    else if(r.empty()) return false;
+    else if(comparable(r)) {
+      bool proper = false;
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(r_array[i].same(r[i])) 
+          continue;
+        else if(r_array[i].proper_subset(r[i]))
+          proper = true;
+        else
+          return false;
+      }
+      return proper;
+    } else return false;
+  }
 
-    // check whether r is equal with this range
-    bool is_same(const Range& r) const {
-      if(!is_valid() || !r.is_valid())
-        return false;
-      if(r_array.size() != r.r_array.size()) 
-        return false;
-      for(unsigned int i=0; i<r_array.size(); i++)
-        if(r_array[i] != r.r_array[i]) return false;
+  // check whether this is a superset of r
+  templat<class T> inline
+  bool Range<T>::subset(const Range<T>& r) const {
+    if(r.empty())    return true;
+    else if(empty()) return false;
+    else if(comparable(r)) {
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(!r_array[i].superset(r[i])) 
+          return false;
+      }
       return true;
-    }
+    } else return false;
+  }
+
+  // check whether this is a proper superset of r
+  templat<class T> inline
+  bool Range<T>::subset(const Range<T>& r) const {
+    if(r.empty())    return !empty();
+    else if(empty()) return false;
+    else if(comparable(r)) {
+      bool proper = false;
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(r_array[i].same(r[i])) 
+          continue;
+        else if(r_array[i].proper_superset(r[i]))
+          proper = true;
+        else
+          return false;
+      }
+      return proper;
+    } else return false;
+  }
+
+  // check whether this range is a singleton range
+  template<class T> inline
+  bool Range<T>::singleton() const {
+    return empty() || size() == min_unit<T>();
+  }  
+  
+  // check whether r is equal with this range
+  template<class T> inline
+  bool Range<T>::is_same(const Range<T>& r) const {
+    if(empty()) return r.empty();
+    else if(comparable(r)) {
+      for(unsigned int i=0; i<r_array.size(); i++) {
+        if(!r_array[i].same(r[i]))
+          return false;
+      }
+      return true;
+    } else return false;
+  }
+
+  /////////////////////////////////////////////////////
+
+
 
     // simple combine without check
     Range combine(const Range& r) const {

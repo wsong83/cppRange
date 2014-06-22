@@ -64,10 +64,10 @@ namespace CppRange {
     // Helpers
 
     // data accessers
-    void set_upper(const T&);	                        // set a new upper bound 
-    const T& upper() const;				// get the upper bound
-    void set_lower(const T&);				// set a new lower bound
-    const T& lower() const;				// get the lower bound
+    void set_upper(const T&);                           // set a new upper bound 
+    const T& upper() const;                             // get the upper bound
+    void set_lower(const T&);                           // set a new lower bound
+    const T& lower() const;                             // get the lower bound
 
     virtual T size() const;                             // get the size of the range
     virtual bool empty() const;                         // ? this is empty
@@ -333,7 +333,7 @@ namespace CppRange {
     if(!empty()) {
       os << upper();
       if(upper() != lower()) 
-	os << ":" << lower();
+    os << ":" << lower();
     }
     os << "]";
     return os;

@@ -26,10 +26,11 @@ TARGETS = testRangeElement testRange testRangeMap
 INCDIRS = -I../include
 CXX = g++
 CXXFLAGS = -Wall -Wextra -g
+HEADERS = $(wildcard ../include/*.hpp)
 
 all: $(TARGETS) test
 
-$(TARGETS): %:%.cpp $($wildcard ../include/*.hpp)
+$(TARGETS): %:%.cpp $(HEADERS)
 	$(CXX) $(INCDIRS) $(CXXFLAGS) $< -o $@
 
 test:
@@ -37,7 +38,10 @@ test:
 	./testRange
 	./testRangeMap
 
-.PHONY: clean
+MDebug:
+	echo $(HEADERS)
+
+.PHONY: clean MDebug
 
 clean:
 	-rm $(TARGETS)

@@ -100,7 +100,7 @@ namespace CppRange {
     virtual Range hull(const Range& r) const;           // get the minimal superset of the union
                                                         // of this and r
     virtual Range intersection(const Range& r) const;   // get the intersection of this and r
-    virtual Range complement(const Range& r) const;     // substract r from this range
+    virtual Range complement(const Range& r) const;     // subtract r from this range
     virtual boost::tuple<Range, Range, Range>
     divide(const Range& r) const;                       // standard divide/partition this and r
     
@@ -108,8 +108,8 @@ namespace CppRange {
                                                         // stream out the range
 
   protected:
-    bool comparable(const Range& r) const;              // ? this and r can be compared 
-    bool operable(const Range& r) const;                // ? this and r are operable
+    virtual bool comparable(const Range& r) const;      // ? this and r can be compared 
+    virtual bool operable(const Range& r) const;        // ? this and r are operable
                                                         // only one dimension is not equal
   };
 
@@ -119,18 +119,18 @@ namespace CppRange {
   // constructors
 
   // construct from a list of RangeElements
-  templat<class T> inline
-  explicit Range<T>::Range(const std::list<RangeElement<T> >& l)
+  template<class T> inline
+  Range<T>::Range(const std::list<RangeElement<T> >& l)
     : r_array(std::vector<RangeElement<T> >(l.begin(), l.end())) {} 
 
   // construct from a vector of RangeElements
-  templat<class T> inline
-  explicit Range<T>::Range(const std::vector<RangeElement<T> >& l)
+  template<class T> inline
+  Range<T>::Range(const std::vector<RangeElement<T> >& l)
     : r_array(l) {}
 
   // construct from a list of raw range pairs
-  templat<class T> inline
-  explicit Range<T>::Range(const std::list<std::pair<T,T> >& l) {
+  template<class T> inline
+  Range<T>::Range(const std::list<std::pair<T,T> >& l) {
     r_array.resize(l.size());
     unsigned int i = 0;
     typedef std::pair<T,T> local_range_pair;
@@ -139,8 +139,8 @@ namespace CppRange {
   }
 
   // construct from a vector of raw range pairs
-  templat<class T> inline
-  explicit Range<T>::Range(const std::vector<std::pair<T,T> >& l) {
+  template<class T> inline
+  Range<T>::Range(const std::vector<std::pair<T,T> >& l) {
     r_array.resize(l.size());
     unsigned int i = 0;
     typedef std::pair<T,T> local_range_pair;
@@ -150,12 +150,12 @@ namespace CppRange {
 
   //////////////////////////////////////////////
   // data accesser
-  templat<class T> inline
+  template<class T> inline
   RangeElement<T>& Range<T>::operator[] (unsigned int index) {
     return r_array.at(index);
   }
   
-  templat<class T> inline
+  template<class T> inline
   const RangeElement<T>& Range<T>::operator[] (unsigned int index) const {
     return r_array.at(index);
   }
@@ -164,13 +164,13 @@ namespace CppRange {
   // Helpers
   
   // size of dimension
-  templat<class T> inline
+  template<class T> inline
   unsigned int Range<T>::dimension() const {
     return r_array.size();
   }
 
   // size of bits
-  templat<class T> inline
+  template<class T> inline
   T Range<T>::size() const {
     if(empty()) return T(0);
     
@@ -182,20 +182,20 @@ namespace CppRange {
   
   // add a higher dimension
   // this method is very expernsive, do not use if possible
-  templat<class T> inline
+  template<class T> inline
   void Range<T>::add_upper(const RangeElement<T>& r) {
     r_array.insert(r_array.begin(), r);
   }
 
   // add a lower dimension
-  templat<class T> inline
+  template<class T> inline
   void Range<T>::add_lower(const RangeElement<T>& r) {
     r_array.push_back(r);
   }
 
   // add a dimension
   // this method is very expernsive, do not use if possible
-  templat<class T> inline
+  template<class T> inline
   void Range<T>::add_dimension(const RangeElement<T>& r, unsigned int pos) {
     // ** need to check pos < size ?
     r_array.insert(r_array.begin() + pos, r);
@@ -203,27 +203,27 @@ namespace CppRange {
    
   // remove the highest dimension
   // this method is very expernsive, do not use if possible
-  templat<class T> inline
-  void Range<T>::remove_upper(const RangeElement<T>& r) {
-    r_array.erase(r_array.begin(), r);
+  template<class T> inline
+  void Range<T>::remove_upper() {
+    r_array.erase(r_array.begin());
   }
 
   // remove the lowest dimension
-  templat<class T> inline
-  void Range<T>::remove_lower(const RangeElement<T>& r) {
-    r_array.pop_back(r);
+  template<class T> inline
+  void Range<T>::remove_lower() {
+    r_array.pop_back();
   }
 
   // remove a dimension
   // this method is very expernsive, do not use if possible
-  templat<class T> inline
-  void Range<T>::remove_dimension(const RangeElement<T>& r, unsigned int pos) {
+  template<class T> inline
+  void Range<T>::remove_dimension(unsigned int pos) {
     // ** need to check pos < size ?
-    r_array.erase(r_array.begin() + pos, r);
+    r_array.erase(r_array.begin() + pos);
   }
 
   // check whether the range expression is empty
-  templat<class T> inline
+  template<class T> inline
   bool Range<T>::empty() const {
     if(r_array.empty()) return true;
     for(unsigned int i=0; i<r_array.size(); i++) 
@@ -232,8 +232,8 @@ namespace CppRange {
   }
 
   // check whether this is a subset of r
-  templat<class T> inline
-  bool Range<T>::subset(const Range<T>& r) const {
+  template<class T> inline
+  bool Range<T>::subset(const Range& r) const {
     if(empty()) return true;
     if(r.empty()) return false;
     if(!comparable()) return false; // or throw an exception
@@ -246,8 +246,8 @@ namespace CppRange {
   }
 
   // check whether this is a proper subset of r
-  templat<class T> inline
-  bool Range<T>::proper_subset(const Range<T>& r) const {
+  template<class T> inline
+  bool Range<T>::proper_subset(const Range& r) const {
     if(empty()) return !r.empty();
     if(r.empty()) return false;
     if(!comparable(r)) return false; // or throw an exception
@@ -265,8 +265,8 @@ namespace CppRange {
   }
 
   // check whether this is a superset of r
-  templat<class T> inline
-  bool Range<T>::superset(const Range<T>& r) const {
+  template<class T> inline
+  bool Range<T>::superset(const Range& r) const {
     if(r.empty()) return true;
     if(empty()) return false;
     if(!comparable(r)) return false; // or throw an exception
@@ -279,8 +279,8 @@ namespace CppRange {
   }
 
   // check whether this is a proper superset of r
-  templat<class T> inline
-  bool Range<T>::proper_superset(const Range<T>& r) const {
+  template<class T> inline
+  bool Range<T>::proper_superset(const Range& r) const {
     if(r.empty()) return !empty();
     if(empty()) return false;
     if(!comparable(r)) return false; // or throw an exception
@@ -305,7 +305,7 @@ namespace CppRange {
   
   // check whether r is equal with this range
   template<class T> inline
-  bool Range<T>::equal(const Range<T>& r) const {
+  bool Range<T>::equal(const Range& r) const {
     if(empty()) return r.empty();
     if(!comparable(r)) return false; // or throw an exception
 
@@ -318,7 +318,7 @@ namespace CppRange {
 
   // check whether the range and this range are adjacent
   template<class T> inline
-  bool Range<T>::connected(const Range<T>& r) const {
+  bool Range<T>::connected(const Range& r) const {
     if(empty() || r.empty()) return false;
     if(comparable(r)) return false;
     
@@ -347,7 +347,7 @@ namespace CppRange {
 
   // whether this and r has non-empty intersection
   template<class T> inline
-  bool Range<T>::overlap(const Range<T>& r) const {
+  bool Range<T>::overlap(const Range& r) const {
     if(empty() || r.empty())  return false;
     if(!comparable()) return false; // or throw an exception
 
@@ -360,7 +360,7 @@ namespace CppRange {
 
   // whether this and r have no shared range
   template<class T> inline
-  bool Range<T>::disjoint(const Range<T>& r) const {
+  bool Range<T>::disjoint(const Range& r) const {
     if(empty() || r.empty())  return true;
     if(!comparable()) return false; // or throw an exception
 
@@ -373,12 +373,12 @@ namespace CppRange {
 
   // combine two ranges
   template<class T> inline
-  Range<T> Range<T>::combine(const Range<T>& r) const {
+  Range<T> Range<T>::combine(const Range& r) const {
     if(empty()) return r;
     if(r.empty()) return *this;
-    if(!comparable(r)) return Range<T>(); // or throw an exception
+    if(!comparable(r)) return Range(); // or throw an exception
 
-    Range<T> rv;
+    Range rv;
     rv.r_array.resize(r_array.size());
     for(unsigned int i=0; i<r_array.size(); i++)
       rv.r_array[i] = r_array[i].combine(r.r_array[i]);
@@ -387,12 +387,12 @@ namespace CppRange {
 
   // get the minimal range contain the two ranges
   template<class T> inline
-  Range<T> Range<T>::hull(const Range<T>& r) const {
+  Range<T> Range<T>::hull(const Range& r) const {
     if(empty()) return r;
     if(r.empty()) return *this;
-    if(!comparable(r)) return Range<T>(); // or throw an exception
+    if(!comparable(r)) return Range(); // or throw an exception
 
-    Range<T> rv;
+    Range rv;
     rv.r_array.resize(r_array.size());
     for(unsigned int i=0; i<r_array.size(); i++)
       rv.r_array[i] = r_array[i].hull(r.r_array[i]);
@@ -401,25 +401,25 @@ namespace CppRange {
 
   // get the shared range
   template<class T> inline
-  Range<T> Range<T>::intersection(const Range<T>& r) const {
-    if(empty() || r.empty()) return Range<T>();
-    if(!comparable(r)) return Range<T>(); // or throw an exception
+  Range<T> Range<T>::intersection(const Range& r) const {
+    if(empty() || r.empty()) return Range();
+    if(!comparable(r)) return Range(); // or throw an exception
 
-    Range<T> rv;
+    Range rv;
     rv.r_array.resize(r_array.size());
     for(unsigned int i=0; i<r_array.size(); i++)
       rv.r_array[i] = r_array[i].intersection(r.r_array[i]);
     return rv;
   }
 
-  //substraction
+  //subtraction
   template<class T> inline
-  Range<T> Range<T>::complement(const Range<T>& r) const {
-    if(empty()) return Range<T>();
+  Range<T> Range<T>::complement(const Range& r) const {
+    if(empty()) return Range();
     if(r.empty()) return *this;
-    if(!operable(r)) return Range<T>(); // or throw an exception
+    if(!operable(r)) return Range(); // or throw an exception
 
-    Range<T> rv(r);
+    Range rv(r);
     rv.r_array.resize(r_array.size());
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].equal(r.r_array[i])) {
@@ -428,14 +428,14 @@ namespace CppRange {
       }
     }
     
-    return Range<T>();          // the two ranges are equal
+    return Range();          // the two ranges are equal
   }
 
-  //substraction
+  //subtraction
   template<class T> inline
   boost::tuple<Range<T>, Range<T>, Range<T> >
-  Range<T>::divide(const Range<T>& r) const {
-    boost::tuple<Range<T>, Range<T>, Range<T> > rv;
+  Range<T>::divide(const Range& r) const {
+    boost::tuple<Range, Range, Range > rv;
     if(empty() || r.empty()) {
       boost::get<1>(rv) = hull(r);
       return rv;
@@ -453,7 +453,7 @@ namespace CppRange {
         boost::tie(rH, rM, rL) = r_array[i].divide(r.r_array[i]);
         boost::get<0>(rv).r_array[i] = rH;
         if(rM.empty())
-          boost::get<1>(rv) = Range<T>();
+          boost::get<1>(rv) = Range();
         else
           boost::get<1>(rv) = rM;
         boost::get<2>(rv).r_array[i] = rL;
@@ -462,139 +462,108 @@ namespace CppRange {
     }
 
     // the two ranges are equal
-    boost::get<0>(rv) = Range<T>();
+    boost::get<0>(rv) = Range();
     boost::get<1>(rv) = r;
-    boost::get<2>(rv) = Range<T>();    
+    boost::get<2>(rv) = Range();    
   }
 
-  ////////////////////////
-
-
-    // check whether the ranges can be compared
-    // indicating they have the same number of dimensions
-    bool is_comparable(const Range& r) const {
-      if(!is_valid() || !r.is_valid())
-        return false;
-      else 
-        return r_array.size() == r.r_array.size();
-    }
-    
-    // check whether the range and this range satify the operable condition:
-    // only one dimension is not equal
-    bool is_operable(const Range& r) const {
-      if(!is_valid() || !r.is_valid())
-        return false;
-      
-      if(r_array.size() != r.r_array.size()) return false;
-      unsigned int cnt = 0;     // counting the different dimensions
+  // stream out the range
+  template<class T> inline
+  std::ostream& Range<T>::streamout(std::ostream& os) const{
+    if(empty()) os << "[]";
+    else {
       for(unsigned int i=0; i<r_array.size(); i++)
-        if(r_array[i] != r.r_array[i]) cnt++;
-      if(cnt > 1) return false;
-      else return true;
+        os << r_array[i];
     }
+    return os;
+  }
 
-    // stream out function
-    std::ostream& streamout(std::ostream& os) const{
-      if(is_valid()) {
-        for(unsigned int i=0; i<r_array.size(); i++)
-          os << r_array[i];
-      } else {
-        os << "[]";
+
+  //////////////////////////////////////////////
+  // Protected Helpers
+
+  // check whether the ranges can be compared
+  // indicating they have the same number of dimensions
+  template<class T> inline
+  bool Range<T>::comparable(const Range& r) const {
+    return r_array.size() == r.r_array.size();
+  }
+    
+  // check whether the range and this range satify the operable condition:
+  // no more than one dimension is not equal
+  template<class T> inline
+  bool Range<T>::operable(const Range& r) const {
+    if(!comparable(r)) return false;
+    
+    bool diff = false;
+    for(unsigned int i=0; i<r_array.size(); i++) {
+      if(!r_array[i].equal(r.r_array[i])) {
+        if(diff) return false;  // more than one dimensions are different
+        else diff = true;
       }
-      return os;
     }
-
+    return true;
   };
 
   /////////////////////////////////////////////
   // overload operators
 
-  // rhs range is enclosed in lhs (not equal)
+  // rhs range is less than lhs
   template <class T>
   bool operator> (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_comparable(rhs))
-      return lhs.is_enclosed(rhs) && !lhs.is_same(rhs);
-    else 
-      return false;
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return rhs.less(lhs);
   }
 
-  // rhs range is enclosed in lhs
+  // rhs range is less than or equal to lhs
   template <class T>
   bool operator>= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_comparable(rhs))
-      return lhs.is_enclosed(rhs);
-    else 
-      return false;
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return rhs.less(lhs) || lhs.equal(rhs);
   }
 
-  // lhs range is enclosed in rhs (not equal)
+  // lhs range is larger than rhs
   template <class T>
   bool operator< (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_comparable(rhs)) 
-      return rhs.is_enclosed(lhs) && !rhs.is_same(lhs);
-    else 
-      return false;
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return lhs.less(rhs);
   }
 
-  // lhs range is enclosed in rhs
+  // lhs range is larger than or equal to rhs
   template <class T>
-  inline bool operator<= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_comparable(rhs)) 
-      return rhs.is_enclosed(lhs);
-    else 
-      return false;
+  bool operator<= (const Range<T>& lhs, const Range<T>& rhs) {
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return lhs.less(rhs) || lhs.equal(rhs);
   }
   
   // two ranges are equal
-  template <class T>  
-  bool operator== (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_comparable(rhs)) 
-      return rhs.is_same(lhs);
-    else 
-      return false;
+  template <class T>
+  inline bool operator== (const Range<T>& lhs, const Range<T>& rhs) {
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return rhs.equal(lhs);
   }
 
   // two ranges are not equal
-  template <class T>  
-  bool operator!= (const Range<T>& lhs, const Range<T>& rhs) {
-    return !(rhs == lhs);
+  template <class T>
+  inline bool operator!= (const Range<T>& lhs, const Range<T>& rhs) {
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return !rhs.equal(lhs);
   }
 
   // return the overlapped range
+  // function does not check the result's validation
   template <class T>  
   Range<T> operator& (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_comparable(rhs)) 
-      return lhs.overlap(rhs);
-    else 
-      return Range<T>();
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return lhs.intersection(rhs);
   }
 
   // return the combined range
-  template <class T>
+  // function does not check the result's validation
+  template <class T>  
   Range<T> operator| (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_adjacent(rhs))
-      return lhs.combine(rhs);
-    else
-      return Range<T>();
-  }
-
-  // return the reduced range
-  template <class T>
-  Range<T> operator- (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_operable(rhs))
-      return lhs.reduce(rhs);
-    else
-      return Range<T>();
-  }
-
-  // return the standard division (high, overlapped, low)
-  template <class T>
-  boost::tuple<Range<T>, Range<T>, Range<T> > 
-  operator^ (const Range<T>& lhs, const Range<T>& rhs) {
-    if(lhs.is_adjacent(rhs))
-      return lhs.divideBy(rhs);
-    else
-      return boost::tuple<Range<T>, Range<T>, Range<T> >();
+    if(!lhs.comparable(rhs)) return false; // or throw an exception
+    return lhs.combine(rhs);
   }
 
   // standard out stream

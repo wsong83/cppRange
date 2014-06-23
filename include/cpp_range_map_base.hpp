@@ -49,6 +49,9 @@ namespace CppRange {
     unsigned int level;               // level of sub-ranges
   public:
 
+    // allow RangeMap to use protected member functions
+    friend RangeMap<T>;
+
     //////////////////////////////////////////////
     // constructors
 
@@ -63,8 +66,6 @@ namespace CppRange {
     RangeMapBase(const RangeElement<T>&, InputIterator first, InputIterator last);
                                                         // build a multidimensional range map 
                                                         // using iterators
-    RangeMapBase& operator= (const RangeElement<T>&);   // convert a RangeElement to a RangeMapBase
-
 
     //////////////////////////////////////////////
     // Helpers
@@ -196,12 +197,6 @@ namespace CppRange {
     } else {
       level = 1;
     }
-  }
-
-  // assign
-  template<class T> inline
-  RangeMapBase<T>& RangeMapBase<T>::operator= (const RangeElement<T>& r) {
-    *this = RangeMapBase(r);
   }
 
   //////////////////////////////////////////////
@@ -382,7 +377,7 @@ namespace CppRange {
   // static helper functions
 
   // claculat the bit size
-  template<class T>
+  template<class T> inline
   T RangeMapBase<T>::size(const std::list<RangeMapBase>& rlist) {
     // will not check the validation, the non-static method should check it
     T rv(0);
@@ -392,7 +387,7 @@ namespace CppRange {
   }
 
   // valid range expression
-  template<class T>
+  template<class T> inline
   bool RangeMapBase<T>::valid(const std::list<RangeMapBase>& rlist, unsigned int l) {
     BOOST_FOREACH(const RangeMapBase& b, rlist)
       if(!b.valid() || l != b.level) return false;
@@ -400,7 +395,7 @@ namespace CppRange {
   }
 
   // check whether the child list is empty
-  template<class T>
+  template<class T> inline
   bool RangeMapBase<T>::empty(const std::list<RangeMapBase>& rlist) {
     // will not check the validation, the non-static method should check it
     if(rlist.empty()) return false; // empty child means it is a leaf range
@@ -467,17 +462,15 @@ namespace CppRange {
   }
 
   // check whether two range lists are equal
-  template<T>
+  template<T> inline
   bool RangeMapBase<T>::equal(const std::list<RangeMapBase>& lhs_arg, 
-                            const std::list<RangeMapBase>& rhs_arg
-                            ) {
+                              const std::list<RangeMapBase>& rhs_arg
+                              ) {
     typename std::list<RangeMapBase>::const_iterator lit, rit;
     for(lit = lhs_arg.begin(), rit = rhs_arg.begin();
         lit != lhs_arg.end() && rit != rhs_arg.end();
-        ++lit, ++rit) {
-      if(!lit->equal(*rit))
-        return false;
-    }
+        ++lit, ++rit) 
+      if(!lit->equal(*rit)) return false;
        
     if(lit != lhs_arg.end() || rit != rhs_arg.end())
       return false;
@@ -485,142 +478,130 @@ namespace CppRange {
       return true;
   }
 
-    // combine two child lists
-    static std::list<RangeMapBase> 
-    combine (const std::list<RangeMapBase>& lhs_arg, 
-             const std::list<RangeMapBase>& rhs_arg
-             ) {
-      std::list<RangeMapBase> lhs = lhs_arg;
-      std::list<RangeMapBase> rhs = rhs_arg;
-      std::list<RangeMapBase> rv;
+  // combine two child lists
+  template<T> inline
+  std::list<RangeMapBase<T> > 
+  RangeMapBase<T>::combine (const std::list<RangeMapBase>& lhs_arg, 
+                            const std::list<RangeMapBase>& rhs_arg
+                            ) {
+    std::list<RangeMapBase> lhs = lhs_arg;
+    std::list<RangeMapBase> rhs = rhs_arg;
+    std::list<RangeMapBase> rv;
       
-      typename std::list<RangeMapBase<T> >::iterator lit, rit;
-      for(lit = lhs.begin(), rit = rhs.begin();
-          lit == lhs.end() || rit == rhs.end();
-          ) {
-        // using the standard combine function
-        RangeMapBase rH, rM, rL;
-        boost::tie(rH, rM, rL) = lit->combine(*rit);
+    typename std::list<RangeMapBase<T> >::iterator lit, rit;
+    for(lit = lhs.begin(), rit = rhs.begin();
+        lit == lhs.end() || rit == rhs.end();
+        ) {
+      // using the standard combine function
+      RangeMapBase rH, rM, rL;
+      boost::tie(rH, rM, rL) = lit->combine(*rit);
        
-        // check result
-        if(rH.is_valid()) rv.push_back(rH);
-        if(rM.is_valid()) {
-          // the two ranges are overlapped
-          rv.push_back(rM);
-
-          if(rL.is_valid()) {
-            if(lit->RangeElement<T>::is_enclosed(rL)) {
-              // the lower part belongs to lit, rit proceeds and lit recounts
-              ++rit;
-              *lit = rL;
-            } else {
-              // otherwise lit proceeds and rit recounts
-             ++lit;
-             *rit = rL;
-           }
+      // check result
+      if(!rH.empty()) rv.push_back(rH);
+      if(!rM.empty()) {
+        // the two ranges are overlapped
+        rv.push_back(rM);
+        
+        if(!rL.empty()) {
+          if(lit->RangeElement<T>::is_enclosed(rL)) {
+            // the lower part belongs to lit, rit proceeds and lit recounts
+            ++rit; *lit = rL;
           } else {
-            // both range list proceed
-            ++rit;
-            ++lit;
+            // otherwise lit proceeds and rit recounts
+            ++lit; *rit = rL;
           }
         } else {
-          // the two ranges are disjunctive
-          if(lit->RangeElement<T>::is_enclosed(rL))
-            ++rit;
-          else
-            ++lit;
+          // both range list proceed
+          ++rit; ++lit;
         }
+      } else {
+        // the two ranges are disjunctive
+        if(rL.subset(*lit))  ++rit;
+        else                 ++lit;
+      }
+    }
+    
+    // push the rest
+    if(lit != lhs.end()) rv.splice(rv.end(), lhs, lit, lhs.end());
+    if(rit != rhs.end()) rv.splice(rv.end(), rhs, rit, rhs.end());
+    
+    normalize(rv);
+    return rv;
+  }
+
+
+  // get the intersection of two ranges
+  template<class T> inline
+  std::list<RangeMapBase<T> >
+  intersection(const std::list<RangeMapBase>& lhs_arg, 
+               const std::list<RangeMapBase>& rhs_arg) {
+    std::list<RangeMapBase> rv;
+    
+    BOOST_FOREACH(const RangeMapBase<T>& cl, lhs_arg) {
+      BOOST_FOREACH(const RangeMapBase<T>& cr, rhs_arg) {
+        RangeMapBase<T> result(cl.intersection(cr));
+        if(!result.empty()) rv.push_back(result);
+      }
+    }
+    normalize(rv);
+    return rv;
+  }
+
+  // reduce the content of a range list (rhs) from another (lhs)
+  template<class T> inline
+  std::list<RangeMapBase<T> >
+  complement(const std::list<RangeMapBase>& lhs_arg, 
+             const std::list<RangeMapBase>& rhs_arg) {
+      
+    std::list<RangeMapBase> lhs = lhs_arg;
+    std::list<RangeMapBase> rhs = rhs_arg;
+    std::list<RangeMapBase> rv;
+    
+    typename std::list<RangeMapBase<T> >::iterator lit, rit;
+    for(lit = lhs.begin(), rit = rhs.begin();
+        lit == lhs.end() || rit == rhs.end();
+        ) {
+      // using the standard combine function
+      RangeElement<T> rH, rM, rL;
+      boost::tie(rH, rM, rL) = lit->RangeElement<T>::divide(*rit);
+      
+      // check result
+      if(!rH.empty() && rH.subset(*lit)) {
+        RangeMapBase mH(rH, lit->child);          
+        rv.push_back(mH);
       }
 
-      // push the rest
-      if(lit != lhs.end())
-        rv.splice(rv.end(), lhs, lit, lhs.end());
-      if(rit != rhs.end())
-        rv.splice(rv.end(), rhs, rit, rhs.end());
-
-      normalize(rv);
-      return rv;
-    }
-
-
-    // overlap two ranges
-    static std::list<RangeMapBase>
-    overlap(const std::list<RangeMapBase>& lhs_arg, 
-           const std::list<RangeMapBase>& rhs_arg) {
-
-      std::list<RangeMapBase> rv;
-
-      BOOST_FOREACH(const RangeMapBase<T>& cl, lhs_arg) {
-        BOOST_FOREACH(const RangeMapBase<T>& cr, rhs_arg) {
-          RangeMapBase<T> result = cl & cr;
-          if(result.is_valid())
-            rv.push_back(result);
-        }
-      }
-      normalize(rv);
-      return rv;
-    }
-
-    // reduce the content of a range list (rhs) from another (lhs)
-    static std::list<RangeMapBase>
-    reduce(const std::list<RangeMapBase>& lhs_arg, 
-           const std::list<RangeMapBase>& rhs_arg) {
-      
-      std::list<RangeMapBase> lhs = lhs_arg;
-      std::list<RangeMapBase> rhs = rhs_arg;
-      std::list<RangeMapBase> rv;
-      
-      typename std::list<RangeMapBase<T> >::iterator lit, rit;
-      for(lit = lhs.begin(), rit = rhs.begin();
-          lit == lhs.end() || rit == rhs.end();
-          ) {
-        // using the standard combine function
-        RangeElement<T> rH, rM, rL;
-        boost::tie(rH, rM, rL) = lit->RangeElement<T>::divideBy(*rit);
-       
-        // check result
-        if(rH.is_valid() && lit->RangeElement<T>::is_enclosed(rH)) {
-          RangeMapBase mH(rH, lit->child);          
-          rv.push_back(mH);
-        }
-
-        if(rM.is_valid()) {
-          // the two ranges are overlapped
-          RangeMapBase mM(rM);
-          mM.set_child(reduce(lit->child, rit->child));
-          rv.push_back(mM);
-
-          if(rL.is_valid()) {
-            if(lit->RangeElement<T>::is_enclosed(rL)) {
-              // the lower part belongs to lit, rit proceeds and lit recounts
-              ++rit;
-              *lit = RangeMapBase(rL, lit->child);
-            } else {
-              // otherwise lit proceeds and rit recounts
-             ++lit;
-             *rit = RangeMapBase(rL, rit->child);
-           }
+      if(!rM.empty()) {
+        // the two ranges are overlapped
+        RangeMapBase mM(rM);
+        mM.set_child(complement(lit->child, rit->child));
+        rv.push_back(mM);
+        
+        if(!rL.empty()) {
+          if(rL.subset(*lit)) {
+            // the lower part belongs to lit, rit proceeds and lit recounts
+            ++rit; *lit = rL;
           } else {
-            // both range list proceed
-            ++rit;
-            ++lit;
+            // otherwise lit proceeds and rit recounts
+            ++lit; *rit = rL;
           }
         } else {
-          // the two ranges are disjunctive
-          if(lit->RangeElement<T>::is_enclosed(rL))
-            ++rit;
-          else
-            ++lit;
+          // both range list proceed
+          ++rit; ++lit;
         }
+      } else {
+        // the two ranges are disjunctive
+        if(rL.subset(*lit))  ++rit;
+        else                 ++lit;
       }
-
-      // push the rest
-      if(lit != lhs.end())
-        rv.splice(rv.end(), lhs, lit, lhs.end());
-
-      normalize(rv);
-      return rv;
     }
+    
+    // push the rest
+    if(lit != lhs.end()) rv.splice(rv.end(), lhs, lit, lhs.end());
+
+    normalize(rv);
+    return rv;
+  }
 
     static void normalize (std::list<RangeMapBase>& rlist) {
       // nothing to be normalized if there is less than one sub-range

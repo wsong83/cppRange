@@ -75,8 +75,8 @@ namespace CppRange {
                                                         // start from the highest (left)
     const RangeElement<T>& operator[] (unsigned int) const;
 
-    unsigned int dimension() const;                     // the number of dimensions
-    T size() const;                                     // the size of the range
+    virtual unsigned int dimension() const;             // the number of dimensions
+    virtual T size() const;                             // the size of the range
     void add_upper(const RangeElement<T>&);             // add a higher dimension, expensive
                                                         // do not use whenever possible
     void add_lower(const RangeElement<T>&);             // add a lower dimension

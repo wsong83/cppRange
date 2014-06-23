@@ -51,6 +51,84 @@ namespace CppRange {
     //////////////////////////////////////////////
     // constructors
 
+    RangeMapBase();
+    RangeMapBase(const T&);                             // a single bit range 
+    RangeMapBase(const T&, const T&);                   // single level range
+    explicit RangeMapBase(const RangeElement<T>&);      // range element to range map base
+    explicit RangeMapBase(const Range<T>& r);           // multidimensional range to range map base
+    explicit RangeMapBase(const RangeElement<T>& r, const std::list<RangeMapBase>& rlist);
+                                                        // multidimensional range map base
+
+    //////////////////////////////////////////////
+    // Helpers
+
+    using RangeElement<T>::upper;
+    using RangeElement<T>::lower;
+
+    virtual unsigned int dimension() const;             // the number of dimensions
+    virtual T size() const;                             // the size of the range
+    virtual bool empty() const;                         // ? this is an empty range 
+    virtual bool subset(const Range&) const;            // ? this is a subset of r
+    virtual bool proper_subset( const Range&) const;    // ? this is a proper subset of r
+    virtual bool superset(const Range&) const;          // ? this is a superset of r
+    virtual bool proper_superset( const Range&) const;  // ? this is a proper superset of r
+    virtual bool singleton() const;                     // ? this is a singleton range 
+    virtual bool equal(const Range& r) const;           // ? this == r 
+    virtual bool less(const Range& r) const;            // weak order compare
+    virtual bool overlap(const Range& r) const;         // this & r != []
+    virtual bool disjoint(const Range& r) const;        // this & r == []
+    virtual boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
+    combine(const Range& r) const;                      // get the union of this and r
+    virtual Range intersection(const Range& r) const;   // get the intersection of this and r
+    virtual boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
+    complement(const Range& r) const;                   // subtract r from this range
+    
+    virtual std::ostream& streamout(std::ostream& os) const;
+                                                        // stream out the range
+    //////////////////////////////////
+    // static helper functions
+
+    static void add_child(std::list<RangeMapBase>&, const RangeMapBase&);
+                                                        // add a Range into a list of ranges
+    static T size(const std::list<RangeMapBase>&);      // calculate the bit size of a range list
+    static bool empty(const std::list<RangeMapBase>&);  // ? a range list is empty
+    static bool subset(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
+                                                        // subset relation of two range lists
+    static bool equal(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
+                                                        // ? two range lists are equal
+    static bool less(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
+                                                        // weak order
+    static std::list<RangeMapBase> 
+    combine(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
+                                                        // combine two range lists
+    static std::list<RangeMapBase>
+    intersection(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
+                                                        // get the intersection of two range lists
+    static std::list<RangeMapBase>
+    complement(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
+                                                        // get the result of list l - list r
+    static void normalize(std::list<RangeMapBase>&);    // normalize a range list
+
+  protected:
+
+    void set_child(const std::list<RangeMapBase>&);     // set a new child range list 
+    bool add_child(const RangeMapBase&);                // insert a sub-range to the child list
+    
+  private:
+    // Disable some derived member functions
+
+    // connected() is too difficult and with no explicit usage in RangeMap
+    void connected();
+    
+    // divide() and hull() are no longer useful because the combine() is now capable of handling
+    // complex ranges
+    void divide();
+    void hull();
+  };
+
+    //////////////////////////////////////////////
+    // constructors
+
     // default to construct an range with undefined value
     RangeMapBase()
       : RangeElement<T>(), level(0) {}

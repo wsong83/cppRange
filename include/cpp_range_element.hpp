@@ -64,9 +64,9 @@ namespace CppRange {
     // Helpers
 
     // data accessers
-    void set_upper(const T&);                           // set a new upper bound 
+    void upper(const T&);                               // set a new upper bound 
     const T& upper() const;                             // get the upper bound
-    void set_lower(const T&);                           // set a new lower bound
+    void lower(const T&);                               // set a new lower bound
     const T& lower() const;                             // get the lower bound
 
     virtual T size() const;                             // get the size of the range
@@ -130,7 +130,7 @@ namespace CppRange {
 
   // bound accessor
   template<class T> inline
-  void RangeElement<T>::set_upper(const T& upper_bound) {
+  void RangeElement<T>::upper(const T& upper_bound) {
     initialized = true; 
     r_pair.first = upper_bound;
   }
@@ -141,7 +141,7 @@ namespace CppRange {
   }
   
   template<class T> inline
-  void RangeElement<T>::set_lower(const T& lower_bound) { 
+  void RangeElement<T>::lower(const T& lower_bound) { 
     initialized = true; 
     r_pair.second = lower_bound;
   }
@@ -289,9 +289,9 @@ namespace CppRange {
     
     RangeElement rv(*this);
     if(upper() != RAnd.upper())
-      rv.set_lower(RAnd.upper() + min_unit<T>());
+      rv.lower(RAnd.upper() + min_unit<T>());
     if(lower() != RAnd.lower())
-      rv.set_upper(RAnd.lower() - min_unit<T>());
+      rv.upper(RAnd.lower() - min_unit<T>());
     return rv;
   }
 

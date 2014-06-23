@@ -21,6 +21,7 @@
  * An C++ STL static range calculation library
  * 20/05/2014   Wei Song
  *
+ * Note: this class is not suppose to be used by user directly
  *
  */
 
@@ -55,9 +56,15 @@ namespace CppRange {
     RangeMapBase(const T&);                             // a single bit range 
     RangeMapBase(const T&, const T&);                   // single level range
     explicit RangeMapBase(const RangeElement<T>&);      // range element to range map base
-    explicit RangeMapBase(const Range<T>& r);           // multidimensional range to range map base
-    explicit RangeMapBase(const RangeElement<T>& r, const std::list<RangeMapBase>& rlist);
+    explicit RangeMapBase(const Range<T>&);             // multidimensional range to range map base
+    explicit RangeMapBase(const RangeElement<T>&, const std::list<RangeMapBase>&);
                                                         // multidimensional range map base
+    template<class InputIterator>
+    RangeMapBase(const RangeElement<T>&, InputIterator first, InputIterator last);
+                                                        // build a multidimensional range map 
+                                                        // using iterators
+    RangeMapBase& operator= (const RangeElement<T>&);   // convert a RangeElement to a RangeMapBase
+
 
     //////////////////////////////////////////////
     // Helpers
@@ -67,14 +74,11 @@ namespace CppRange {
 
     virtual unsigned int dimension() const;             // the number of dimensions
     virtual T size() const;                             // the size of the range
+                                                        // ** check: validation beforehand
+                                                        // ** the same for all followings
+    virtual bool valid() const;                         // ? this is a valid range
     virtual bool empty() const;                         // ? this is an empty range 
-    virtual bool subset(const Range&) const;            // ? this is a subset of r
-    virtual bool proper_subset( const Range&) const;    // ? this is a proper subset of r
-    virtual bool superset(const Range&) const;          // ? this is a superset of r
-    virtual bool proper_superset( const Range&) const;  // ? this is a proper superset of r
-    virtual bool singleton() const;                     // ? this is a singleton range 
     virtual bool equal(const Range& r) const;           // ? this == r 
-    virtual bool less(const Range& r) const;            // weak order compare
     virtual bool overlap(const Range& r) const;         // this & r != []
     virtual bool disjoint(const Range& r) const;        // this & r == []
     virtual boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
@@ -85,19 +89,22 @@ namespace CppRange {
     
     virtual std::ostream& streamout(std::ostream& os) const;
                                                         // stream out the range
+  protected:
+
+    void set_child(const std::list<RangeMapBase>&);     // set a new child range list 
+    bool add_child(const RangeMapBase&);                // insert a sub-range to the child list
+    
     //////////////////////////////////
     // static helper functions
 
-    static void add_child(std::list<RangeMapBase>&, const RangeMapBase&);
-                                                        // add a Range into a list of ranges
     static T size(const std::list<RangeMapBase>&);      // calculate the bit size of a range list
     static bool empty(const std::list<RangeMapBase>&);  // ? a range list is empty
+    static bool valid(const std::list<RangeMapBase>&, unsigned int level);  
+                                                        // ? a range list is valid
     static bool subset(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
                                                         // subset relation of two range lists
     static bool equal(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
                                                         // ? two range lists are equal
-    static bool less(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
-                                                        // weak order
     static std::list<RangeMapBase> 
     combine(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
                                                         // combine two range lists
@@ -108,12 +115,11 @@ namespace CppRange {
     complement(const std::list<RangeMapBase>&, const std::list<RangeMapBase>&);
                                                         // get the result of list l - list r
     static void normalize(std::list<RangeMapBase>&);    // normalize a range list
+    static void add_child(std::list<RangeMapBase>&, const RangeMapBase&);
+                                                        // add a Range into a list of ranges
+    static const std::list<RangeMapBase>& validate(const std::list<RangeMapBase>&);
+                                                        // validate a range list
 
-  protected:
-
-    void set_child(const std::list<RangeMapBase>&);     // set a new child range list 
-    bool add_child(const RangeMapBase&);                // insert a sub-range to the child list
-    
   private:
     // Disable some derived member functions
 
@@ -124,122 +130,123 @@ namespace CppRange {
     // complex ranges
     void divide();
     void hull();
+
+    // kind impossible to implement a strict less
+    void less();
+
+    // not needed in a not user friendly class
+    void subset();
+    void proper_subset();
+    void superset();
+    void proper_superset();
+    void singleton();
   };
 
-    //////////////////////////////////////////////
-    // constructors
+  /////////////////////////////////////////////
+  // implementation of class methods
 
-    // default to construct an range with undefined value
-    RangeMapBase()
-      : RangeElement<T>(), level(0) {}
+  // constructors
+  // default to construct an range with undefined value
+  template<class T> inline
+  RangeMapBase<T>::RangeMapBase()
+    : RangeElement<T>(), level(0) {}
 
-    // single bit range
-    RangeMapBase(const T& r)
-      : RangeElement<T>(r), level(1) {}
+  // single bit range
+  template<class T> inline
+  RangeMapBase<T>::RangeMapBase(const T& r)
+    : RangeElement<T>(r), level(1) {}
 
-    // bit range
-    RangeMapBase(const T& rh, const T& rl)
-      : RangeElement<T>(rh, rl), level(1) {}
+  // bit range
+  template<class T> inline
+  RangeMapBase<T>::RangeMapBase(const T& rh, const T& rl)
+    : RangeElement<T>(rh, rl), level(1) {}
 
-    // type conversion
-    explicit RangeMapBase(const RangeElement<T>& r)
-      : RangeElement<T>(r), level(1) {}
+  // type conversion
+  template<class T> inline
+  RangeMapBase<T>::RangeMapBase(const RangeElement<T>& r)
+    : RangeElement<T>(r), level(1) {}
 
-    // type conversion
-    explicit RangeMapBase(const Range<T>& r) 
-      :level(0) {
-      unsigned int rlevel = r.size_dimension();
-      if(rlevel > 0) {
-        RangeMapBase m(r[rlevel-1]);
-        for(int i=rlevel-2; i>=0; i--) {
-          RangeMapBase n(r[i]);
-          n.add_child(m);
-          m = n;
-        }
-        *this = m;
-      }
+  // type conversion
+  template<class T> inline
+  RangeMapBase<T>::RangeMapBase(const Range<T>& r) 
+    :level(0) {
+    std::vector<RangeElement<T> >::const_iterator it = r.begin();
+    if(it != r.end()) {
+      RangeElement<T> base_range = *it++;
+      *this = RangeMapBase(base_range, it, r.end());
     }
+  }
 
-    // combined build
-    explicit RangeMapBase(const RangeElement<T>& r, const std::list<RangeMapBase>& rlist)
-      : RangeElement<T>(r), child(rlist) {
-      if(rlist.empty())
-        level = 1;
-      else
-        level = 1 + rlist.front().level;
+  // combined build
+  template<class T> inline
+  RangeMapBase<T>::RangeMapBase(const RangeElement<T>& r, const std::list<RangeMapBase>& rlist)
+    : RangeElement<T>(r), child(validate(rlist)) {
+    if(child.empty()) level = 1;
+    else              level = child.front().level + 1;
+  }
+
+  // build a multidimensional range map using iterators
+  template<class T> template<class InputIterator> inline
+  RangeMapBase(const RangeElement<T>& r, InputIterator first, InputIterator last)
+    : RangeElement<T>(r) {
+    if(first != last) {
+      RangeElement<T> base_range = *first++;
+      child.push_back(RangeMapBase(base_range, first, last));
+      level = child.front().level + 1;
+    } else {
+      level = 1;
     }
+  }
 
-    // copy
-    explicit RangeMapBase(const RangeMapBase& r)
-      : RangeElement<T>(r), child(r.child), level(r.level) {}
+  // assign
+  template<class T> inline
+  RangeMapBase<T>& RangeMapBase<T>::operator= (const RangeElement<T>& r) {
+    *this = RangeMapBase(r);
+  }
 
-    // assign
-    RangeMapBase& operator= (const RangeElement<T>& r) {
-      *this = RangeMapBase(r);
-    }
+  //////////////////////////////////////////////
+  // Helpers
 
-    //////////////////////////////////////////////
-    // Helpers
-
-    using RangeElement<T>::first;
-    using RangeElement<T>::second;
+  // get the number of dimensions
+  template<class T> inline
+  unsigned int RangeMapBase<T>::dimension() const {
+    return level;
+  }
     
-    const std::list<RangeMapBase>& get_child() const {
-      return child;
-    }
+  // get the size of this range
+  template<class T> inline
+  T RangeMapBase<T>::size(bool check) const {
+    return size(child) * RangeElement<T>::size();
+  }
+  
+  // whether the range is valid
+  template<class T> inline
+  bool RangeMapBase<T>::valid() const {
+    return RangeElement<T>::valid() && valid(child, level - 1);
+  }
+  
+  // whether the range is empty
+  template<class T> inline
+  bool RangeMapBase<T>::empty(bool check) const {
+    return RangeElement<T>::empty() || empty(child);
+  }
 
-    void set_child(const std::list<RangeMapBase>& c) {
-      child = c;
-      if(c.empty())
-        level = 1;
-      else
-        level = 1 + c.front().level;      
-    }
+  // check whether this is a subset of r
+  template<class T> inline
+  bool RangeMapBase<T>::subset(const RangeMapBase& r) const {
+    if(empty()) return true;
+    if(r.empty()) return false;
+    if(!comparable(r)) return false; // or throw an exception
+    return RangeElement<T>::subset(r) && subset(child, r);
+  }
 
-    // insert a sub-range
-    bool add_child(const RangeMapBase& r) {
-      if(!r.is_valid()) return false;
-
-      if(child.empty)
-        level = r.level + 1;
-      else if(level != r.level + 1)
-        return false;
-
-      add_child(child, r);
-      return true;
-    }
-
-    unsigned int get_level() const {
-      return level;
-    }
-    
-    // size of bit
-    virtual T size_bit() const {
-      return size_bit(child) * RangeElement<T>::size_bit();
-    }
-    
-    // valid range expression
-    virtual bool is_valid() const {
-      return RangeElement<T>::is_valid() && is_valid(child);
-    }
-    
-    // check whether range r is enclosed in this range 
-    virtual bool is_enclosed(const RangeMapBase& r) const {
-      return 
-        (level == r.level) 
-        && RangeElement<T>::is_enclosed(r) 
-        && is_enclosed(child, r.child);
-    }
-    
-
-    // check whether range r is equal with this range
-    virtual bool is_same(const RangeMapBase& r) const {
-      return 
-        (level == r.level)
-        && RangeElement<T>::is_same(r)
-        && (child.size() == r.child.size())
-        && is_same(child, r.child());
-    }
+  // check whether range r is equal with this range
+  template<class T> inline
+  bool RangeMapBase<T>::equal(const RangeMapBase& r) const {
+    if(empty()) return r.empty();
+    if(!comparable(r)) return false; // or throw an exception
+    return RangeElement<T>::equal(r) && equal(child, r);
+  }
   
     
     // weak order
@@ -368,178 +375,115 @@ namespace CppRange {
       return os;
     }
 
-  private:
-    // Disable some derived member functions
+  //////////////////////////////////
+  // protected helper functions
 
-    // is_adjacent() is too difficult and with no explicit usage in RangeMap
-    void is_adjacent();
+  //////////////////////////////////
+  // static helper functions
+
+  // claculat the bit size
+  template<class T>
+  T RangeMapBase<T>::size(const std::list<RangeMapBase>& rlist) {
+    // will not check the validation, the non-static method should check it
+    T rv(0);
+    BOOST_FOREACH(const RangeMapBase& b, rlist)
+      rv = rv + b.size();  // disable check
+    return rv;
+  }
+
+  // valid range expression
+  template<class T>
+  bool RangeMapBase<T>::valid(const std::list<RangeMapBase>& rlist, unsigned int l) {
+    BOOST_FOREACH(const RangeMapBase& b, rlist)
+      if(!b.valid() || l != b.level) return false;
+    return true;
+  }
+
+  // check whether the child list is empty
+  template<class T>
+  bool RangeMapBase<T>::empty(const std::list<RangeMapBase>& rlist) {
+    // will not check the validation, the non-static method should check it
+    if(rlist.empty()) return false; // empty child means it is a leaf range
+                                    // the emptiness is then depends on the base range
+    BOOST_FOREACH(const RangeMapBase& b, rlist)
+      if(!b.empty()) return true; // any non-empty sub-range means non-empty
+
+    return true;                // all sub-ranges are empty, should be normalized!
+  }
+
+  // check whether 'lhs' is a subset of 'rhs'
+  template<class T>
+  bool RangeMapBase<T>::subset(const std::list<RangeMapBase>& lhs_arg, 
+                               const std::list<RangeMapBase>& rhs_arg
+                               ) {
     
-    // divideBy() is no longer useful because the combine() is now capable of handling
-    // complex ranges
-    void divideBy();
+    std::list<RangeMapBase> lhs = lhs_arg;
+    std::list<RangeMapBase> rhs = rhs_arg;
 
-  public:
-    //////////////////////////////////
-    // static helper functions
-
-    static void add_child(std::list<RangeMapBase>& rlist, const RangeMapBase& r) {
+    typename std::list<RangeMapBase<T> >::iterator lit, rit;
+    for(lit = lhs.begin(), rit = rhs.begin();
+        lit == lhs.end() || rit == rhs.end();
+        ) {
       
-      std::list<RangeMapBase> rv;
-      RangeMapBase mr = r;
-
-      typename std::list<RangeMapBase<T> >::iterator lit;
-      for(lit = rlist.begin();
-          lit == rlist.end();
-          ) {
-        // using the standard combine function
-        RangeMapBase rH, rM, rL;
-        boost::tie(rH, rM, rL) = lit->combine(mr);
-       
-        // check result
-        if(rH.is_valid()) rlist.insert(lit, rH);
-        if(rM.is_valid()) {
-          // the two ranges are overlapped
-          rlist.insert(lit, rH);
-
-          if(rL.is_valid()) {
-            if(lit->RangeElement<T>::is_enclosed(rL)) {
-              // the lower part belongs to lit, insertion finished
-              mr = RangeMapBase();
-              *lit = rL;
-              break;
-            } else {
-              // otherwise lit proceeds and mr recounts
-              lit = rlist.erase(lit);
-              mr = rL;
-           }
+      if(!lit->RangeElement<T>::intersection(*rit).empty()) {
+        
+        // using the standard divide function
+        RangeElement<T> rH, rM, rL;
+        boost::tie(rH, rM, rL) = lit->RangeElement<T>::divide(*rit);
+          
+        // check the higher part
+        if(!rH.empty() && rH.subset(*lit)) // rH belongs to lit
+          return false;
+        
+        // the overlapped part
+        if(!subset(lit->child, rit->child))
+          return false;
+        
+        // check the lower part
+        if(!rL.empty()) {
+          if(rL.subset(*rit)) {
+            ++lit;
+            *rit = RangeMapBase(rL, rit->child);
           } else {
-            // rL empty also means finished
-            mr = RangeMapBase();
-            lit = rlist.erase(lit);
-            break;
+            ++lit;
+            *lit = RangeMapBase(rL, lit->child);
           }
         } else {
-          // the two ranges are disjunctive
-          if(lit->RangeElement<T>::is_enclosed(rL)) {
-            // mr already inserted
-            mr = RangeMapBase();
-            break;
-          } else
-            ++lit;
+          ++lit;
+          ++rit;
         }
+      } else {
+        if(rit->RangeElement<T>::less(*lit)) // some part belongs to lit but not rit
+          return false;
+        else
+          ++rit;
       }
-
-      // push the rest
-      if(mr.is_valid())
-        rlist.insert(lit, mr);
-
-      normalize(rlist);
     }
 
-    // claculat the bit size
-    static T size_bit(const std::list<RangeMapBase>& rlist) {
-      T rv = 0;
-      BOOST_FOREACH(const RangeMapBase& b, rlist)
-        rv = rv + b.size_bit();
-      return rv;
-    }
-
-    // valid range expression
-    static bool is_valid(const std::list<RangeMapBase>& rlist) {
-      BOOST_FOREACH(const RangeMapBase& b, rlist)
-        if(!b.is_valid()) return false;
+    if(lit != lhs.end())
+      return false;
+    else
       return true;
-    }
+  }
 
-    // check whether a range list encloses another one
-    static bool is_enclosed(const std::list<RangeMapBase>& lhs_arg, 
-                     const std::list<RangeMapBase>& rhs_arg
-                     ) {
-      
-      std::list<RangeMapBase> lhs = lhs_arg;
-      std::list<RangeMapBase> rhs = rhs_arg;
-
-      typename std::list<RangeMapBase<T> >::iterator lit, rit;
-      for(lit = lhs.begin(), rit = rhs.begin();
-          lit == lhs.end() || rit == rhs.end();
-          ) {
-        
-        if(lit->RangeElement<T>::overlap(*rit).is_valid()) {
-          
-          // using the standard divide function
-          RangeElement<T> rH, rM, rL;
-          boost::tie(rH, rM, rL) = lit->RangeElement<T>::divideBy(*rit);
-          
-          // check the higher part
-          if(rH.is_valid() && rit->RangeElement<T>::is_enclosed(rH)) // rit > rH
-          return false;
-        
-          // the overlapped part
-          if(!is_enclosed(lit->child, rit->child))
-            return false;
-          
-          // check the lower part
-          if(rL.is_valid()) {
-            if(rit->RangeElement<T>::is_enclosed(rH)) {
-              ++lit;
-              *rit = RangeMapBase(rL, rit->child);
-            } else {
-              ++lit;
-              *lit = RangeMapBase(rL, lit->child);
-            }
-          } else {
-            ++lit;
-            ++rit;
-          }
-        } else {
-          if(lit->RangeElement<T>::less(*rit))
-            return false;
-          else
-            ++lit;
-        }
-      }
-
-      if(rit != rhs.end())
+  // check whether two range lists are equal
+  template<T>
+  bool RangeMapBase<T>::equal(const std::list<RangeMapBase>& lhs_arg, 
+                            const std::list<RangeMapBase>& rhs_arg
+                            ) {
+    typename std::list<RangeMapBase>::const_iterator lit, rit;
+    for(lit = lhs_arg.begin(), rit = rhs_arg.begin();
+        lit != lhs_arg.end() && rit != rhs_arg.end();
+        ++lit, ++rit) {
+      if(!lit->equal(*rit))
         return false;
-      else
-        return true;
     }
-
-    // check whether two range lists are equal
-    static bool is_same(const std::list<RangeMapBase>& lhs_arg, 
-                        const std::list<RangeMapBase>& rhs_arg
-                        ) {
-      typename std::list<RangeMapBase>::const_iterator lit, rit;
-      for(lit = lhs_arg.begin(), rit = rhs_arg.begin();
-          lit != lhs_arg.end() && rit != rhs_arg.end();
-          ++lit, ++rit) {
-        if(!lit->is_same(*rit))
-          return false;
-      }
        
-      if(lit != lhs_arg.end() || rit != rhs_arg.end())
-        return false;
-      else
-        return true;
-    }
-
-    // weak order
-    static bool less(const std::list<RangeMapBase>& lhs_arg, 
-                     const std::list<RangeMapBase>& rhs_arg
-                     ) {
-      typename std::list<RangeMapBase<T> >::const_iterator lit, rit;
-      for(lit = lhs_arg.begin(), rit = rhs_arg.begin();
-          lit != lhs_arg.end() && rit != rhs_arg.end();
-          ++lit, ++rit) {
-        if(!lit->is_same(*rit)) // the first non-equal range
-          return lit->less(*rit);
-      }
-
-      if(lit != lhs_arg.end()) // local hase larger range
-        return false;
-      else
-        return true;
-    }
+    if(lit != lhs_arg.end() || rit != rhs_arg.end())
+      return false;
+    else
+      return true;
+  }
 
     // combine two child lists
     static std::list<RangeMapBase> 
@@ -700,11 +644,87 @@ namespace CppRange {
 
   };
     
+  template<class T>
+  void RangeMapBase<T>::add_child(std::list<RangeMapBase>& rlist, const RangeMapBase& r) {
+      
+      std::list<RangeMapBase> rv;
+      RangeMapBase mr = r;
+
+      typename std::list<RangeMapBase<T> >::iterator lit;
+      for(lit = rlist.begin();
+          lit == rlist.end();
+          ) {
+        // using the standard combine function
+        RangeMapBase rH, rM, rL;
+        boost::tie(rH, rM, rL) = lit->combine(mr);
+       
+        // check result
+        if(rH.is_valid()) rlist.insert(lit, rH);
+        if(rM.is_valid()) {
+          // the two ranges are overlapped
+          rlist.insert(lit, rH);
+
+          if(rL.is_valid()) {
+            if(lit->RangeElement<T>::is_enclosed(rL)) {
+              // the lower part belongs to lit, insertion finished
+              mr = RangeMapBase();
+              *lit = rL;
+              break;
+            } else {
+              // otherwise lit proceeds and mr recounts
+              lit = rlist.erase(lit);
+              mr = rL;
+           }
+          } else {
+            // rL empty also means finished
+            mr = RangeMapBase();
+            lit = rlist.erase(lit);
+            break;
+          }
+        } else {
+          // the two ranges are disjunctive
+          if(lit->RangeElement<T>::is_enclosed(rL)) {
+            // mr already inserted
+            mr = RangeMapBase();
+            break;
+          } else
+            ++lit;
+        }
+      }
+
+      // push the rest
+      if(mr.is_valid())
+        rlist.insert(lit, mr);
+
+      normalize(rlist);
+    }
+
   // standard out stream
   template<class T>
   std::ostream& operator<< (std::ostream& os, const RangeMapBase<T>& r) {
     return r.streamout(os);
   }
+
+    void set_child(const std::list<RangeMapBase>& c) {
+      child = c;
+      if(c.empty())
+        level = 1;
+      else
+        level = 1 + c.front().level;      
+    }
+
+    // insert a sub-range
+    bool add_child(const RangeMapBase& r) {
+      if(!r.is_valid()) return false;
+
+      if(child.empty)
+        level = r.level + 1;
+      else if(level != r.level + 1)
+        return false;
+
+      add_child(child, r);
+      return true;
+    }
 
 }
 

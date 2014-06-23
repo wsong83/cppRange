@@ -70,6 +70,7 @@ namespace CppRange {
     const T& lower() const;                             // get the lower bound
 
     virtual T size() const;                             // get the size of the range
+    virtual bool valid() const;                         // check the range is valid
     virtual bool empty() const;                         // ? this is empty
     virtual bool in(T num) const;                       // ? num belongs to this range
     virtual bool subset(const RangeElement& r) const;   // ? this is a subset of r
@@ -154,12 +155,18 @@ namespace CppRange {
   // get the size of the range
   template<class T> inline
   T RangeElement<T>::size() const {
-    T bsize(r_pair.first - r_pair.second + min_unit<T>());
-    return initialized && bsize > T(0) ? bsize : T(0);
+    if(!valid() || !initialized) return T(0);
+    return r_pair.first - r_pair.second + min_unit<T>();
+  }
+
+  // check the range has a valid expression
+  template<class T> inline
+  bool RangeElement<T>::valid() const {
+    return !(upper() < lower());
   }
     
   // check whether the range is empty
-    template<class T> inline
+  template<class T> inline
   bool RangeElement<T>::empty() const {
     return size() == T(0);
   }

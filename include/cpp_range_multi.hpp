@@ -74,6 +74,13 @@ namespace CppRange {
     RangeElement<T>& operator[] (unsigned int);         // access a certain dimension
                                                         // start from the highest (left)
     const RangeElement<T>& operator[] (unsigned int) const;
+    
+    // get iterators
+    std::vector<RangeElement<T> >::iterator begin() { return r_array.begin(); }
+    std::vector<RangeElement<T> >::const_iterator begin() const { return r_array.begin(); }      
+    std::vector<RangeElement<T> >::iterator end() { return r_array.end(); }      
+    std::vector<RangeElement<T> >::const_iterator end() const { return r_array.end(); }      
+    
 
     virtual unsigned int dimension() const;             // the number of dimensions
     virtual T size() const;                             // the size of the range
@@ -85,6 +92,7 @@ namespace CppRange {
     void remove_upper();                                // remove the highest dimension
     void remove_lower();                                // remove the lowest dimension
     void remove_dimension(unsigned int pos);            // remove a dimension at position 'pos'
+    virtual bool valid() const;                         // ? this is a valid range
     virtual bool empty() const;                         // ? this is an empty range 
     virtual bool subset(const Range&) const;            // ? this is a subset of r
     virtual bool proper_subset( const Range&) const;    // ? this is a proper subset of r
@@ -222,6 +230,14 @@ namespace CppRange {
     r_array.erase(r_array.begin() + pos);
   }
 
+  // check whether the range expression is valid
+  template<class T> inline
+  bool Range<T>::valid() const {
+    for(unsigned int i=0; i<r_array.size(); i++) 
+      if(!r_array[i].valid()) return false;
+    return true;
+  }
+
   // check whether the range expression is empty
   template<class T> inline
   bool Range<T>::empty() const {
@@ -236,7 +252,7 @@ namespace CppRange {
   bool Range<T>::subset(const Range& r) const {
     if(empty()) return true;
     if(r.empty()) return false;
-    if(!comparable()) return false; // or throw an exception
+    if(!comparable(r)) return false; // or throw an exception
 
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].subset(r[i])) 

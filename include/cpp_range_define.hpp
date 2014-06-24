@@ -19,24 +19,39 @@
 
 /* 
  * An C++ STL static range calculation library
- * 09/05/2014   Wei Song
+ * 16/06/2014   Wei Song
  *
  *
  */
 
-#ifndef _CPP_RANGE_H_
-#define _CPP_RANGE_H_
+#ifndef _CPP_RANGE_DEFINE_H_
+#define _CPP_RANGE_DEFINE_H_
 
-// RangeElement
-#include "cpp_range_element.hpp"
+namespace CppRange {
 
-// Simple multi-dimensional Range
-// Does not allow operations when ranges have multiple different dimensions
-#include "cpp_range_multi.hpp"
+  //////////////////////////////////////////////////
+  // Special definition for different ranges
+  //////////////////////////////////////////////////
 
-// Complex multi-dimensional Range
-// Allow arbitrary different dimensions
-#include "cpp_range_map_base.hpp"
-#include "cpp_range_map.hpp"
+  // for all classes with default conversion from int
+  template<class T>
+  T min_unit() {
+    return 1;
+  }
+
+  // specializations
+  template<>
+  inline double min_unit<double>() {
+    return 0.0;
+  }
+
+  template<>
+  inline float min_unit<float>() {
+    return 0.0;
+  }
+
+  
+
+}
 
 #endif

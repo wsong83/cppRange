@@ -1,0 +1,20 @@
+* Support infinite.
+* Support open and close ranges.
+* Add a detailed documents.
+* Add rational treasons in the document.
+* Explain why less rather than enclose is chosen as partial order
+* allow throw an exception 
+* add support from string to range
+
+** reduce the interfaces in RangeMapBase
+** check the valid check
+** is less() really necessary?
+
+
+reference :
+Boost Interval Arithmetic Library  http://www.boost.org/doc/libs/1_55_0/libs/numeric/interval/doc/interval.htm
+Google Guava Libraries  http://code.google.com/p/guava-libraries/wiki/RangesExplained
+SUN C++ Interval Arithmetic Library http://docs.oracle.com/cd/E19422-01/819-3696/index.html
+http://en.wikipedia.org/wiki/Set_%28mathematics%29
+http://www.cs.utep.edu/interval-comp/intsoft.html
+Moore, R.E., Kearfott, R.B. and Cloud, M.J. Introduction to Interval Analysis. SIAM, 2009

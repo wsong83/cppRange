@@ -2,21 +2,8 @@
 * Support open and close ranges.
 * Add a detailed documents.
 * Add rational treasons in the document.
-* is_enclosed() -> in(), single number                                              Element|Multi
-* is_valid() -> empty()                                                             Element|Multi
-* is_same() -> equal()                                                              Element|Multi
 * Explain why less rather than enclose is chosen as partial order
-* is_adjacent() -> connected(), explain the case of [5,1] is connected to [10,6]    Element|Multi
-* overlape() -> intersection(), explain why no exception is thrown                  Element|Multi
-* !is_overlap() -> disjoint()                                                       Element|Multi
-* is_overlap() -> overlap()                                                         Element|Multi
 * allow throw an exception 
-* implement span()/hull() * prefer hull                                             Element|Multi
-* implement singleton()                                                             Element|Multi
-* implement subset()                                                                Element|Multi
-* implement proper_subset()                                                         Element|Multi
-* implement superset()                                                              Element|Multi
-* implement proper_superset()                                                       Element|Multi
 * add support from string to range
 
 ** reduce the interfaces in RangeMapBase

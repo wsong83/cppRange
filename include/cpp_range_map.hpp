@@ -328,34 +328,6 @@ namespace CppRange {
   /////////////////////////////////////////////
   // overload operators
 
-  // rhs range is less than lhs
-  template <class T>
-  bool operator> (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
-    if(!lhs.comparable(rhs)) return false; // or throw an exception
-    return rhs.less(lhs);
-  }
-
-  // rhs range is less than or equal to lhs
-  template <class T>
-  bool operator>= (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
-    if(!lhs.comparable(rhs)) return false; // or throw an exception
-    return rhs.less(lhs) || lhs.equal(rhs);
-  }
-
-  // lhs range is larger than rhs
-  template <class T>
-  bool operator< (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
-    if(!lhs.comparable(rhs)) return false; // or throw an exception
-    return lhs.less(rhs);
-  }
-
-  // lhs range is larger than or equal to rhs
-  template <class T>
-  bool operator<= (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
-    if(!lhs.comparable(rhs)) return false; // or throw an exception
-    return lhs.less(rhs) || lhs.equal(rhs);
-  }
-  
   // two ranges are equal
   template <class T>
   inline bool operator== (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {

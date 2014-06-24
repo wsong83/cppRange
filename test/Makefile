@@ -23,10 +23,10 @@
 #
 
 TARGETS = testRangeElement testRange testRangeMap
-INCDIRS = -I../include
+INCDIRS = -I../include -I.
 CXX = g++
 CXXFLAGS = -Wall -Wextra -g
-HEADERS = $(wildcard ../include/*.hpp)
+HEADERS = $(wildcard ../include/*.hpp) test_util.hpp
 
 all: $(TARGETS) test
 

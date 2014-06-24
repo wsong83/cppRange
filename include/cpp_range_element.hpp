@@ -32,7 +32,6 @@
 #include <ostream>
 #include <algorithm>
 #include <boost/tuple/tuple.hpp>
-
 #include "cpp_range_define.hpp"
 
 namespace CppRange {
@@ -180,6 +179,7 @@ namespace CppRange {
   // check this is a subset of r 
   template<class T> inline
   bool RangeElement<T>::subset(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return false;
     if(empty()) return true;
     if(r.empty()) return false;
     return !(r.upper() < upper()) && !(lower() < r.lower());      
@@ -188,14 +188,13 @@ namespace CppRange {
   // check this is a proper subset of r 
   template<class T> inline
   bool RangeElement<T>::proper_subset(const RangeElement& r) const {
-    if(empty()) return !r.empty();
-    if(r.empty()) return false;
-    return (r.upper() > upper()) || (lower() > r.lower());      
+    return subset(r) && !equal(r);      
   }
 
   // check this is a superset of r
   template<class T> inline
   bool RangeElement<T>::superset(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return false;
     if(r.empty()) return true;
     if(empty()) return false;
     return !(upper() < r.upper()) && !(r.lower() < lower());      
@@ -204,20 +203,20 @@ namespace CppRange {
   // check this is a proper superset of r 
   template<class T> inline
   bool RangeElement<T>::proper_superset(const RangeElement& r) const {
-    if(r.empty()) return !empty();
-    if(empty()) return false;
-    return (upper() > r.upper()) || (r.lower() > lower());      
+    return superset(r) && !equal(r);
   }
 
   // check whether this range is a singleton range
   template<class T> inline
   bool RangeElement<T>::singleton() const {
+    if(!valid()) return false;
     return empty() || size() == min_unit<T>();
   }  
 
   // check whether this is equal with r
   template<class T> inline
   bool RangeElement<T>::equal(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return false;
     if(empty()) return r.empty();
     if(r.empty()) return false;
     return (upper() == r.upper()) && (r.lower() == lower());
@@ -226,6 +225,7 @@ namespace CppRange {
   // check whether r is adjacent to this range
   template<class T> inline
   bool RangeElement<T>:: connected(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return false;
     if(empty() || r.empty()) return false;
     return 
       (!(upper() + min_unit<T>() < r.lower()) 
@@ -235,6 +235,7 @@ namespace CppRange {
   // weak order
   template<class T> inline
   bool RangeElement<T>::less(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return false;
     if(empty()) return !r.empty();
     if(r.empty()) return false;
     if(upper() < r.upper()) return true;
@@ -247,6 +248,7 @@ namespace CppRange {
   // check whether r has a shared range with this range
   template<class T> inline
   bool RangeElement<T>::overlap(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return false;
     if(empty() || r.empty()) return false;
     return !(upper() < r.lower()) && !(r.upper() < lower());
   }
@@ -254,6 +256,7 @@ namespace CppRange {
   // check whether r does not have a shared range with this range
   template<class T> inline
   bool RangeElement<T>::disjoint(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return false;
     if(empty() || r.empty()) return true;
     return (upper() < r.lower()) || (r.upper() < lower());
   }
@@ -261,6 +264,7 @@ namespace CppRange {
   // union to ranges
   template<class T> inline
   RangeElement<T> RangeElement<T>::combine(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return RangeElement();
     if(empty()) return r;
     if(r.empty()) return *this;
     if(connected(r)) return hull(r); 
@@ -270,6 +274,7 @@ namespace CppRange {
   // the minimal range to contain both this and r
   template<class T> inline
   RangeElement<T> RangeElement<T>::hull(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return RangeElement();
     if(empty()) return r;
     if(r.empty()) return *this;
     return RangeElement(std::max(upper(), r.upper()),
@@ -279,6 +284,7 @@ namespace CppRange {
   // intersection
   template<class T> inline
   RangeElement<T> RangeElement<T>::intersection(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return RangeElement();
     if(empty() || r.empty()) return RangeElement();
     return RangeElement(std::min(upper(), r.upper()),
                         std::max(lower(), r.lower()));
@@ -287,6 +293,7 @@ namespace CppRange {
   // subtraction
   template<class T> inline
   RangeElement<T> RangeElement<T>::complement(const RangeElement& r) const {
+    if(!valid() || !r.valid()) return RangeElement();
     if(empty()) return RangeElement();
     if(r.empty()) return *this;
     
@@ -307,6 +314,7 @@ namespace CppRange {
   boost::tuple<RangeElement<T>, RangeElement<T>, RangeElement<T> > 
   RangeElement<T>::divide(const RangeElement& r) const {
     boost::tuple<RangeElement, RangeElement, RangeElement > rv;
+    if(!valid() || !r.valid()) return rv;
     if(empty() || r.empty()) {
       boost::get<1>(rv) = hull(r);
       return rv;
@@ -356,6 +364,7 @@ namespace CppRange {
   // rhs range is less than or equal to lhs
   template <class T>
   bool operator>= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
+    if(!lhs.valid() || !rhs.valid()) return false;
     return rhs.less(lhs) || lhs.equal(rhs);
   }
 
@@ -368,6 +377,7 @@ namespace CppRange {
   // lhs range is larger than or equal to rhs
   template <class T>
   bool operator<= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
+    if(!lhs.valid() || !rhs.valid()) return false;
     return lhs.less(rhs) || lhs.equal(rhs);
   }
   
@@ -380,6 +390,7 @@ namespace CppRange {
   // two ranges are not equal
   template <class T>
   inline bool operator!= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
+    if(!lhs.valid() || !rhs.valid()) return false;
     return !rhs.equal(lhs);
   }
 

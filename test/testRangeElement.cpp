@@ -25,8 +25,8 @@
  */
 
 #include "cpp_range.hpp"
+#include "test_util.hpp"
 #include <iostream>
-#include <sstream>
 
 using namespace CppRange;
 using std::cout;
@@ -36,30 +36,6 @@ using std::vector;
 using std::pair;
 using std::string;
 
-// objects to string templates
-template <typename T>
-inline std::string toString (const T& obj) {
-  std::ostringstream sos;
-  sos << obj;
-  return sos.str();
-}
-
-template <typename T>
-inline std::string toString (const boost::tuple<T,T,T>& obj) {
-  std::ostringstream sos;
-  sos << boost::get<0>(obj) << ";" << boost::get<1>(obj) << ";" << boost::get<2>(obj);
-  return sos.str();
-}
-
-bool test(const string& result, const string& answer, bool use_newline, std::ostream& os, const string& comment = "") {
-  os << (use_newline ? "\t" : "  ") << result << comment << endl;
-
-  if(result != answer) {
-    os << "!!! Error, it should be " << answer << endl;
-    return false;
-  } else
-    return true;  
-}
 
 int main() {
 
@@ -230,6 +206,31 @@ int main() {
   cout << ++index << ". [5:3] < [0:-10] ?" ;
   if(!test(toString(RangeElement<int>(5,3) < RangeElement<int>(0,-10)), "0", false, cout)) return 1;
 
+  // compare with an invalid range
+  cout << ++index << ". RB > RE ?" ;
+  if(!test(toString(RB > RE), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
+  cout << ++index << ". RB >= RE ?" ;
+  if(!test(toString(RB >= RE), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+  
+  cout << ++index << ". RB == RE ?" ;
+  if(!test(toString(RB == RE), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+  
+  cout << ++index << ". RB != RE ?" ;
+  if(!test(toString(RB != RE), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+  
+  cout << ++index << ". RB <= RE ?" ;
+  if(!test(toString(RB <= RE), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+  
+  cout << ++index << ". RB < RE ?" ;
+  if(!test(toString(RB < RE), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
 
   /////////////////////////////////////////////////////////////
   cout << endl;
@@ -316,6 +317,22 @@ int main() {
   cout << ++index << ". [] is a proper superset of [] ?" ;
   if(!test(toString(RangeElement<int>().proper_superset(RangeElement<int>())), "0", false, cout)) return 1;
 
+  cout << ++index << ". RA is a subset of RE ?" ;
+  if(!test(toString(RA.subset(RE)), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
+  cout << ++index << ". RA is a proper subset of RE ?" ;
+  if(!test(toString(RA.proper_subset(RE)), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
+  cout << ++index << ". RA is a superset of RE ?" ;
+  if(!test(toString(RA.superset(RE)), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
+  cout << ++index << ". RA is a proper superset of RE ?" ;
+  if(!test(toString(RA.proper_superset(RE)), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
   /////////////////////////////////////////////////////////////
   cout << endl;
   cout << "Test intersection... " << endl;
@@ -346,6 +363,10 @@ int main() {
 
   cout << ++index << ". [5:0] & [0:-10] =>" ;
   if(!test(toString(RangeElement<int>(5,0) & RangeElement<int>(0,-10)), "[0]", false, cout)) return 1;  
+
+  cout << ++index << ". RA & RE =>" ;
+  if(!test(toString(RA & RE), "[]", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
   cout << endl;
@@ -379,6 +400,10 @@ int main() {
   cout << ++index << ". [5:1] | [0:-10] =>" ;
   if(!test(toString(RangeElement<int>(5,0) | RangeElement<int>(0,-10)), "[5:-10]", false, cout)) return 1;  
 
+  cout << ++index << ". RA | RE =>" ;
+  if(!test(toString(RA | RE), "[]", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
   /////////////////////////////////////////////////////////////
   cout << endl;
   cout << "Test hull... " << endl;
@@ -409,6 +434,10 @@ int main() {
 
   cout << ++index << ". the minimal range contains [5:1] and [0:-10] ?" ;
   if(!test(toString(RangeElement<int>(5,0).hull(RangeElement<int>(0,-10))), "[5:-10]", false, cout)) return 1;  
+
+  cout << ++index << ". the minimal range contains RA and RE ?" ;
+  if(!test(toString(RA.hull(RE)), "[]", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
   cout << endl;
@@ -444,6 +473,10 @@ int main() {
 
   cout << ++index << ". [10:0] deducted by [10:8] ?" ;
   if(!test(toString(RangeElement<int>(10,0).complement(RangeElement<int>(10,8))), "[7:0]", false, cout)) return 1;  
+
+  cout << ++index << ". RA deducted by RE ?" ;
+  if(!test(toString(RA.complement(RE)), "[]", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
   cout << endl;
@@ -481,6 +514,10 @@ int main() {
 
   cout << ++index << ". [2:0] divided by [10:3] ?" ;
   if(!test(toString(RangeElement<int>(2,0).divide(RangeElement<int>(10,3))), "[10:3];[];[2:0]", false, cout)) return 1;
+
+  cout << ++index << ". RA divided by RE ?" ;
+  if(!test(toString(RA.divide(RE)), "[];[];[]", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
   cout << endl;
@@ -560,6 +597,18 @@ int main() {
 
   cout << ++index << ". [10:0] is disjoint to [3:2] ?" ;
   if(!test(toString(RangeElement<int>(10,0).disjoint(RangeElement<int>(3,2))), "0", false, cout)) return 1;
+
+  cout << ++index << ". RA overlaps with RE ?";
+  if(!test(toString(RA.disjoint(RE)), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
+  cout << ++index << ". RA is adjacent with RE ?";
+  if(!test(toString(RA.disjoint(RE)), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
+
+  cout << ++index << ". RA is disjoint with RE ?";
+  if(!test(toString(RA.disjoint(RE)), "0", false, cout,
+           "\n  *invalid operation due to RE is invalid.")) return 1;
 
   // dimension
 

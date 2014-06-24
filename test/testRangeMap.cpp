@@ -68,7 +68,7 @@ int main() {
 
   cout << ++index << ". construct and print a valid integer range RB [3:0][12:-3] =>";
   Range<int> RMap_builderB(RMap_builderA);
-  RMap_builder[1] = RangeElement<int>(-4,-5); // [3:0][-4:-5];
+  RMap_builderB[1] = RangeElement<int>(-4,-5); // [3:0][-4:-5];
   RangeMap<int> RB(RA);
   RB = RB.complement(RangeMap<int>(RMap_builderB)); // [3:0][12:-5] - [3:0][-4:-5]
   if(!test(toString(RB), "[3:0][12:-3]", false, cout)) return 1;
@@ -202,7 +202,7 @@ int main() {
   if(!test(toString(RA.proper_superset(RangeMap<int>())), "1", false, cout)) return 1;
 
   cout << ++index << ". [] is a superset of [] ?" ;
-  if(!test(toString(Range<int>().superset(RangeMap<int>())), "1", false, cout)) return 1;
+  if(!test(toString(RangeMap<int>().superset(RangeMap<int>())), "1", false, cout)) return 1;
 
   cout << ++index << ". [] is a proper superset of [] ?" ;
   if(!test(toString(RangeMap<int>().proper_superset(RangeMap<int>())), "0", false, cout)) return 1;
@@ -368,7 +368,7 @@ int main() {
 
   // overlap
   cout << ++index << ". RA overlaps with [3:0][15:12] ?";
-  RMap_builderA[1] = RangeElement<int>(15:12);
+  RMap_builderA[1] = RangeElement<int>(15,12);
   if(!test(toString(RA.overlap(RangeMap<int>(RMap_builderA))), "1", false, cout)) return 1;
   
   cout << ++index << ". RA overlaps with [3:0][15:13] ?";
@@ -429,10 +429,6 @@ int main() {
 
   cout << "\nRangeMap<int> test successful!" << endl;
   cout << endl;
-  
-  return 0;
-}
-
   
   return 0;
 }

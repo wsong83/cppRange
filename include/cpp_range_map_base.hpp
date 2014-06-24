@@ -234,8 +234,7 @@ namespace CppRange {
   template<class T> inline
   bool RangeMapBase<T>::equal(const RangeMapBase& r) const {
     if(empty()) return r.empty();
-    if(!comparable(r)) return false; // or throw an exception
-    return RangeElement<T>::equal(r) && equal(child, r);
+    return RangeElement<T>::equal(r) && equal(child, r.child);
   }
   
   // combine two ranges
@@ -249,9 +248,9 @@ namespace CppRange {
       // get the standard division
       RangeElement<T> rH, rM, rL;
       boost::tie(rH, rM, rL) = RangeElement<T>::divide(r);
-      boost::get<0>(rv) = rH;
-      boost::get<1>(rv) = rM;
-      boost::get<2>(rv) = rL;
+      boost::get<0>(rv) = RangeMapBase<T>(rH);
+      boost::get<1>(rv) = RangeMapBase<T>(rM);
+      boost::get<2>(rv) = RangeMapBase<T>(rL);
         
       // get the higher part
       if(!rH.empty()) {
@@ -637,7 +636,7 @@ namespace CppRange {
     if(!rlist.empty()) {
       if(rlist.size() > 1) {  // more than one sub-ranges
         os << "{";
-        for(typename std::list<RangeElement<T> >::const_iterator it = rlist.begin();
+        for(typename std::list<RangeMapBase<T> >::const_iterator it = rlist.begin();
             it != rlist.end(); ) {
           os << *it;
           ++it;

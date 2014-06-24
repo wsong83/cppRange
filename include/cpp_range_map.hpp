@@ -94,7 +94,6 @@ namespace CppRange {
     virtual std::ostream& streamout(std::ostream& os) const;
                                                         // stream out the range
 
-  protected:
     virtual bool comparable(const RangeMap& r) const;      // ? this and r can be compared 
 
   };
@@ -158,7 +157,7 @@ namespace CppRange {
   // no check at all
   template<class T> inline
   RangeMap<T>::RangeMap(const std::list<RangeMapBase<T> >& rlist)  
-    : level(0), child(rlist) {
+    : child(rlist), level(0) {
     if(!child.empty()) level = child.front().dimension();
   }
  
@@ -183,7 +182,7 @@ namespace CppRange {
   // valid range expression
   template<class T> inline
   bool RangeMap<T>::valid() const {
-    return RangeMapBase<T>::valid(child);
+    return RangeMapBase<T>::valid(child, level);
   }
 
   // check whether the range is empty
@@ -199,7 +198,7 @@ namespace CppRange {
     if(!valid() || !r.valid()) return false;
     if(empty()) return true;
     if(r.empty()) return false;
-    if(!comparable()) return false; // should throw an exception
+    if(!comparable(r)) return false; // should throw an exception
     return RangeMapBase<T>::subset(child, r.child);
   }
 
@@ -209,7 +208,7 @@ namespace CppRange {
     if(!valid() || !r.valid()) return false;
     if(empty()) return !r.empty();
     if(r.empty()) return false;
-    if(!comparable()) return false; // should throw an exception
+    if(!comparable(r)) return false; // should throw an exception
     return RangeMapBase<T>::subset(child, r.child) && !equal(r);
   }
 
@@ -219,7 +218,7 @@ namespace CppRange {
     if(!valid() || !r.valid()) return false;
     if(r.empty()) return true;
     if(empty()) return false;
-    if(!comparable()) return false; // should throw an exception
+    if(!comparable(r)) return false; // should throw an exception
     return RangeMapBase<T>::subset(r.child, child);
   }
 
@@ -229,7 +228,7 @@ namespace CppRange {
     if(!valid() || !r.valid()) return false;
     if(r.empty()) return !empty();
     if(empty()) return false;
-    if(!comparable()) return false; // should throw an exception
+    if(!comparable(r)) return false; // should throw an exception
     return RangeMapBase<T>::subset(r.child, child) && !equal(r);
   }
 
@@ -245,7 +244,7 @@ namespace CppRange {
   bool RangeMap<T>::equal(const RangeMap& r) const {
     if(!valid() || !r.valid()) return false;
     if(empty()) return r.empty();
-    if(!comparable()) return false; // should throw an exception
+    if(!comparable(r)) return false; // should throw an exception
     return RangeMapBase<T>::equal(child, r.child);
   }
 
@@ -254,7 +253,7 @@ namespace CppRange {
   bool RangeMap<T>::overlap(const RangeMap& r) const {
     if(!valid() || !r.valid()) return false;
     if(empty() || r.empty()) return false;
-    if(!comparable()) return false; // should throw an exception
+    if(!comparable(r)) return false; // should throw an exception
     return !intersection(r).empty(); // if A&B != []; then A and B are overlapped
   }
 
@@ -263,7 +262,7 @@ namespace CppRange {
   bool RangeMap<T>::disjoint(const RangeMap& r) const {
     if(!valid() || !r.valid()) return false;
     if(empty() || r.empty()) return true;
-    if(!comparable()) return false; // should throw an exception
+    if(!comparable(r)) return false; // should throw an exception
     return intersection(r).empty(); // if A&B == []; then A and B are disjoint
   }
 
@@ -273,7 +272,7 @@ namespace CppRange {
     if(!valid() || !r.valid()) return RangeMap();
     if(empty()) return r;
     if(r.empty()) return *this;
-    if(!comparable()) return RangeMap(); // should throw an exception
+    if(!comparable(r)) return RangeMap(); // should throw an exception
     return RangeMap(RangeMapBase<T>::combine(child, r.child));
   }
 
@@ -283,7 +282,7 @@ namespace CppRange {
     if(!valid() || !r.valid()) return RangeMap();
     if(empty()) return r;
     if(r.empty()) return *this;
-    if(!comparable()) return RangeMap(); // should throw an exception
+    if(!comparable(r)) return RangeMap(); // should throw an exception
     return RangeMap(RangeMapBase<T>::intersection(child, r.child));
   }
 
@@ -293,27 +292,17 @@ namespace CppRange {
     if(!valid() || !r.valid()) return RangeMap();
     if(empty()) return RangeMap();
     if(r.empty()) return *this;
-    if(!comparable()) return RangeMap(); // should throw an exception
+    if(!comparable(r)) return RangeMap(); // should throw an exception
     return RangeMap(RangeMapBase<T>::complement(child, r.child));
   }
 
   // stream out function
   template<class T> inline
   std::ostream& RangeMap<T>::streamout(std::ostream& os) const{
-    if(!child.empty()) {
-      if(child.size() > 1) {  // more than one sub-ranges
-        for(typename std::list<RangeElement<T> >::const_iterator it = child.begin();
-            it != child.end(); ) {
-          os << *it;
-          ++it;
-          if(it != child.end()) os << ";";
-        }
-      } else {                // only one sub-range
-        os << child.front();
-      }
-    } else                    // empty
+    if(!valid() || empty()) {
       os << "[]";
-    return os;
+      return os;
+    } else return RangeMapBase<T>::streamout(child, os);
   }
 
   /////////////////////////////////////////////

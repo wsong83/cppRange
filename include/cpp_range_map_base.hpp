@@ -119,6 +119,8 @@ namespace CppRange {
     static void normalize(std::list<RangeMapBase>&);    // normalize a range list
     static void add_child(std::list<RangeMapBase>&, const RangeMapBase&);
                                                         // add a Range into a list of ranges
+    static std::ostream& streamout(const std::list<RangeMapBase>&, std::ostream& os);
+                                                        // stream out a range list
 
   private:
     // Disable some derived member functions
@@ -243,7 +245,7 @@ namespace CppRange {
     boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> rv;
     
     RangeElement<T> RAnd = RangeElement<T>::combine(r);
-    if(RAnd.is_valid()) {
+    if(!RAnd.empty()) {
       // get the standard division
       RangeElement<T> rH, rM, rL;
       boost::tie(rH, rM, rL) = RangeElement<T>::divide(r);
@@ -291,21 +293,7 @@ namespace CppRange {
   template<class T> inline
   std::ostream& RangeMapBase<T>::streamout(std::ostream& os) const{
     RangeElement<T>::streamout(os);
-    if(!child.empty()) {
-      if(child.size() > 1) {  // more than one sub-ranges
-        os << "{";
-        for(typename std::list<RangeElement<T> >::const_iterator it = child.begin();
-            it != child.end(); ) {
-          os << *it;
-          ++it;
-          if(it != child.end()) os << ";";
-        }
-        os << "}";
-      } else {                // only one sub-range
-        os << child.front();
-      }
-    }
-    return os;
+    return streamout(child, os);
   }
 
   //////////////////////////////////
@@ -464,7 +452,7 @@ namespace CppRange {
         rv.push_back(rM);
         
         if(!rL.empty()) {
-          if(lit->RangeElement<T>::is_enclosed(rL)) {
+          if(rL.RangeElement<T>::subset(*lit)) {
             // the lower part belongs to lit, rit proceeds and lit recounts
             ++rit; *lit = rL;
           } else {
@@ -477,7 +465,7 @@ namespace CppRange {
         }
       } else {
         // the two ranges are disjunctive
-        if(rL.subset(*lit))  ++rit;
+        if(rL.RangeElement<T>::subset(*lit))  ++rit;
         else                 ++lit;
       }
     }
@@ -541,10 +529,10 @@ namespace CppRange {
         if(!rL.empty()) {
           if(rL.subset(*lit)) {
             // the lower part belongs to lit, rit proceeds and lit recounts
-            ++rit; *lit = rL;
+            ++rit; *lit = RangeMapBase<T>(rL, lit->child);
           } else {
             // otherwise lit proceeds and rit recounts
-            ++lit; *rit = rL;
+            ++lit; *rit = RangeMapBase<T>(rL, lit->child);
           }
         } else {
           // both range list proceed
@@ -643,7 +631,27 @@ namespace CppRange {
     normalize(rlist);
   }
 
-   // standard out stream
+  // stream out the child list
+  template<class T> inline
+  std::ostream& RangeMapBase<T>::streamout(const std::list<RangeMapBase>& rlist, std::ostream& os) {
+    if(!rlist.empty()) {
+      if(rlist.size() > 1) {  // more than one sub-ranges
+        os << "{";
+        for(typename std::list<RangeElement<T> >::const_iterator it = rlist.begin();
+            it != rlist.end(); ) {
+          os << *it;
+          ++it;
+          if(it != rlist.end()) os << ";";
+        }
+        os << "}";
+      } else {                // only one sub-range
+        os << rlist.front();
+      }
+    }
+    return os;
+  }
+
+  // standard out stream
   template<class T>
   std::ostream& operator<< (std::ostream& os, const RangeMapBase<T>& r) {
     return r.streamout(os);

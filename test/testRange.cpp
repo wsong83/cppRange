@@ -562,7 +562,8 @@ int main() {
 
   // overlap
   cout << ++index << ". RA overlaps with [3:0][15:12] ?";
-  Range<int> m(RA); typename std::vector<RangeElement<int> >::iterator it = m.begin();
+  Range<int> m(RA); 
+  std::vector<RangeElement<int> >::iterator it = m.begin();
   it++;
   *it = RangeElement<int>(15,12);
   if(!test(toString(RA.overlap(m)), "1", false, cout)) return 1;

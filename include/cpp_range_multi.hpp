@@ -76,10 +76,14 @@ namespace CppRange {
     const RangeElement<T>& operator[] (unsigned int) const;
     
     // get iterators
-    std::vector<RangeElement<T> >::iterator begin() { return r_array.begin(); }
-    std::vector<RangeElement<T> >::const_iterator begin() const { return r_array.begin(); }      
-    std::vector<RangeElement<T> >::iterator end() { return r_array.end(); }      
-    std::vector<RangeElement<T> >::const_iterator end() const { return r_array.end(); }      
+    typename std::vector<RangeElement<T> >::iterator 
+    begin() { return r_array.begin(); }
+    typename std::vector<RangeElement<T> >::const_iterator 
+    begin() const { return r_array.begin(); }      
+    typename std::vector<RangeElement<T> >::iterator 
+    end() { return r_array.end(); }      
+    typename std::vector<RangeElement<T> >::const_iterator 
+    end() const { return r_array.end(); }      
     
 
     virtual unsigned int dimension() const;             // the number of dimensions

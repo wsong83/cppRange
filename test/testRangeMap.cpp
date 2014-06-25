@@ -24,9 +24,9 @@
  *
  */
 
+#include <iostream>
 #include "cpp_range.hpp"
 #include "test_util.hpp"
-#include <iostream>
 
 using namespace CppRange;
 using std::cout;
@@ -368,6 +368,7 @@ int main() {
 
   // overlap
   cout << ++index << ". RA overlaps with [3:0][15:12] ?";
+  RMap_builderA.remove_lower();
   RMap_builderA[1] = RangeElement<int>(15,12);
   if(!test(toString(RA.overlap(RangeMap<int>(RMap_builderA))), "1", false, cout)) return 1;
   

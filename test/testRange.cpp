@@ -24,9 +24,9 @@
  *
  */
 
+#include <iostream>
 #include "cpp_range.hpp"
 #include "test_util.hpp"
-#include <iostream>
 
 using namespace CppRange;
 using std::cout;
@@ -228,12 +228,10 @@ int main() {
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
   
   cout << ++index << ". RB == RF ?" ;
-  if(!test(toString(RB == RF), "0", false, cout,
-           "\n  *not comparable due to different numbers of dimensions.")) return 1;
+  if(!test(toString(RB == RF), "0", false, cout)) return 1;
   
   cout << ++index << ". RB != RF ?" ;
-  if(!test(toString(RB != RF), "0", false, cout,
-           "\n  *not comparable due to different numbers of dimensions.")) return 1;
+  if(!test(toString(RB != RF), "1", false, cout)) return 1;
   
   cout << ++index << ". RB <= RF ?" ;
   if(!test(toString(RB <= RF), "0", false, cout,

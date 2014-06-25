@@ -6,10 +6,6 @@
 * allow throw an exception 
 * add support from string to range
 
-** reduce the interfaces in RangeMapBase
-** check the valid check
-** is less() really necessary?
-
 
 reference :
 Boost Interval Arithmetic Library  http://www.boost.org/doc/libs/1_55_0/libs/numeric/interval/doc/interval.htm

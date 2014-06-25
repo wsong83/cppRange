@@ -86,8 +86,8 @@ namespace CppRange {
     end() const { return r_array.end(); }      
     
 
-    virtual unsigned int dimension() const;             // the number of dimensions
-    virtual T size() const;                             // the size of the range
+    unsigned int dimension() const;             // the number of dimensions
+    T size() const;                             // the size of the range
     void add_upper(const RangeElement<T>&);             // add a higher dimension, expensive
                                                         // do not use whenever possible
     void add_lower(const RangeElement<T>&);             // add a lower dimension
@@ -96,33 +96,33 @@ namespace CppRange {
     void remove_upper();                                // remove the highest dimension
     void remove_lower();                                // remove the lowest dimension
     void remove_dimension(unsigned int pos);            // remove a dimension at position 'pos'
-    virtual bool valid() const;                         // ? this is a valid range
-    virtual bool empty() const;                         // ? this is an empty range 
-    virtual bool subset(const Range&) const;            // ? this is a subset of r
-    virtual bool proper_subset( const Range&) const;    // ? this is a proper subset of r
-    virtual bool superset(const Range&) const;          // ? this is a superset of r
-    virtual bool proper_superset( const Range&) const;  // ? this is a proper superset of r
-    virtual bool singleton() const;                     // ? this is a singleton range 
-    virtual bool equal(const Range& r) const;           // ? this == r 
-    virtual bool connected(const Range& r) const;       // ? this and r are connected
-    virtual bool less(const Range& r) const;            // weak order compare
-    virtual bool overlap(const Range& r) const;         // this & r != []
-    virtual bool disjoint(const Range& r) const;        // this & r == []
-    virtual Range combine(const Range& r) const;        // get the union of this and r
-    virtual Range hull(const Range& r) const;           // get the minimal superset of the union
+    bool valid() const;                                 // ? this is a valid range
+    bool empty() const;                                 // ? this is an empty range 
+    bool subset(const Range&) const;                    // ? this is a subset of r
+    bool proper_subset( const Range&) const;            // ? this is a proper subset of r
+    bool superset(const Range&) const;                  // ? this is a superset of r
+    bool proper_superset( const Range&) const;          // ? this is a proper superset of r
+    bool singleton() const;                             // ? this is a singleton range 
+    bool equal(const Range& r) const;                   // ? this == r 
+    bool connected(const Range& r) const;               // ? this and r are connected
+    bool less(const Range& r) const;                    // weak order compare
+    bool overlap(const Range& r) const;                 // this & r != []
+    bool disjoint(const Range& r) const;                // this & r == []
+    Range combine(const Range& r) const;                // get the union of this and r
+    Range hull(const Range& r) const;                   // get the minimal superset of the union
                                                         // of this and r
-    virtual Range intersection(const Range& r) const;   // get the intersection of this and r
-    virtual Range complement(const Range& r) const;     // subtract r from this range
-    virtual boost::tuple<Range, Range, Range>
+    Range intersection(const Range& r) const;           // get the intersection of this and r
+    Range complement(const Range& r) const;             // subtract r from this range
+    boost::tuple<Range, Range, Range>
     divide(const Range& r) const;                       // standard divide/partition this and r
     
-    virtual std::ostream& streamout(std::ostream& os) const;
-                                                        // stream out the range
-    // needed by operator overload
-    virtual bool comparable(const Range& r) const;      // ? this and r can be compared 
+    std::ostream& streamout(std::ostream& os) const;    // stream out the range
+
+  private:
+    bool comparable(const Range& r) const;              // ? this and r can be compared 
 
   protected:
-    virtual bool operable(const Range& r) const;        // ? this and r are operable
+    bool operable(const Range& r) const;                // ? this and r are operable
                                                         // only one dimension is not equal
   };
 
@@ -555,7 +555,7 @@ namespace CppRange {
   // rhs range is less than or equal to lhs
   template <class T>
   bool operator>= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid() || !lhs.comparable(rhs)) return false;
+    if(!lhs.valid() || !rhs.valid()) return false;
     return rhs.less(lhs) || lhs.equal(rhs);
   }
 
@@ -568,7 +568,7 @@ namespace CppRange {
   // lhs range is larger than or equal to rhs
   template <class T>
   bool operator<= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid() || !lhs.comparable(rhs)) return false;
+    if(!lhs.valid() || !rhs.valid()) return false;
     return lhs.less(rhs) || lhs.equal(rhs);
   }
   
@@ -581,7 +581,7 @@ namespace CppRange {
   // two ranges are not equal
   template <class T>
   inline bool operator!= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid() || !lhs.comparable(rhs)) return false;
+    if(!lhs.valid() || !rhs.valid()) return false;
     return !rhs.equal(lhs);
   }
 

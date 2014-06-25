@@ -57,7 +57,6 @@ namespace CppRange {
     RangeElement();
     RangeElement(const T&);                             // single bit range
     RangeElement(const T& upper_bound, const T& lower_bound);
-    RangeElement(const RangeElement&);
 
     //////////////////////////////////////////////
     // Helpers
@@ -68,37 +67,31 @@ namespace CppRange {
     void lower(const T&);                               // set a new lower bound
     const T& lower() const;                             // get the lower bound
 
-    virtual T size() const;                             // get the size of the range
-    virtual bool valid() const;                         // check the range is valid
-    virtual bool empty() const;                         // ? this is empty
-    virtual bool in(T num) const;                       // ? num belongs to this range
-    virtual bool subset(const RangeElement& r) const;   // ? this is a subset of r
-    virtual bool proper_subset(const RangeElement& r) const;
-                                                        // ? this is a proper subset of r
-    virtual bool superset(const RangeElement& r) const; // ? this is a superset of r
-    virtual bool proper_superset(const RangeElement& r) const;
-                                                        // ? this is a proper superset of r
-    virtual bool singleton() const;                     // ? this is a singleton range 
-    virtual bool equal(const RangeElement& r) const;    // ? this == r 
-    virtual bool connected(const RangeElement& r) const;
-                                                        // ? this and r are connected
-    virtual bool less(const RangeElement& r) const;     // weak order compare
-    virtual bool overlap(const RangeElement& r) const;  // this & r != []
-    virtual bool disjoint(const RangeElement& r) const; // this & r == []
-    virtual RangeElement combine(const RangeElement& r) const;  
-                                                        // get the union of this and r
-    virtual RangeElement hull(const RangeElement& r) const;
-                                                        // get the minimal superset of the union
+    T size() const;                                     // get the size of the range
+    bool valid() const;                                 // check the range is valid
+    bool empty() const;                                 // ? this is empty
+    bool in(T num) const;                               // ? num belongs to this range
+    bool subset(const RangeElement& r) const;           // ? this is a subset of r
+    bool proper_subset(const RangeElement& r) const;    // ? this is a proper subset of r
+    bool superset(const RangeElement& r) const;         // ? this is a superset of r
+    bool proper_superset(const RangeElement& r) const;  // ? this is a proper superset of r
+    bool singleton() const;                             // ? this is a singleton range 
+    bool equal(const RangeElement& r) const;            // ? this == r 
+    bool connected(const RangeElement& r) const;        // ? this and r are connected
+    bool less(const RangeElement& r) const;             // weak order compare
+    bool overlap(const RangeElement& r) const;          // this & r != []
+    bool disjoint(const RangeElement& r) const;         // this & r == []
+    RangeElement combine(const RangeElement& r) const;  // get the union of this and r
+    RangeElement hull(const RangeElement& r) const;     // get the minimal superset of the union
                                                         // of this and r
-    virtual RangeElement intersection(const RangeElement& r) const;
+    RangeElement intersection(const RangeElement& r) const;
                                                         // get the intersection of this and r
-    virtual RangeElement complement(const RangeElement& r) const;
+    RangeElement complement(const RangeElement& r) const;
                                                         // subtract r from this range
-    virtual boost::tuple<RangeElement, RangeElement, RangeElement>
+    boost::tuple<RangeElement, RangeElement, RangeElement>
     divide(const RangeElement& r) const;                // standard divide/partition this and r
     
-    virtual std::ostream& streamout(std::ostream& os) const;
-                                                        // stream out the range
+    std::ostream& streamout(std::ostream& os) const;    // stream out the range
   };
 
   /////////////////////////////////////////////
@@ -120,11 +113,6 @@ namespace CppRange {
   template<class T> inline
   RangeElement<T>::RangeElement(const T& rh, const T& rl)
     : initialized(true), r_pair(rh, rl) {}
-
-  // type conversion
-  template<class T> inline
-  RangeElement<T>::RangeElement(const RangeElement& r)
-    : initialized(r.initialized), r_pair(r.r_pair) {}
 
   // helpers
 

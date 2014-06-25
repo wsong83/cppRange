@@ -74,23 +74,22 @@ namespace CppRange {
     //////////////////////////////////////////////
     // Helpers
 
-    using RangeElement<T>::upper;
-    using RangeElement<T>::lower;
+    //using RangeElement<T>::upper;
+    //using RangeElement<T>::lower;
 
-    virtual unsigned int dimension() const;             // the number of dimensions
-    virtual T size() const;                             // the size of the range
+    unsigned int dimension() const;                     // the number of dimensions
+    T size() const;                                     // the size of the range
                                                         // ** check: validation beforehand
                                                         // ** the same for all followings
-    virtual bool valid() const;                         // ? this is a valid range
-    virtual bool empty() const;                         // ? this is an empty range 
-    virtual bool equal(const RangeMapBase& r) const;    // ? this == r 
-    virtual boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
+    bool valid() const;                                 // ? this is a valid range
+    bool empty() const;                                 // ? this is an empty range 
+    bool equal(const RangeMapBase& r) const;            // ? this == r 
+    boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> 
     combine(const RangeMapBase& r) const;               // get the union of this and r
-    virtual RangeMapBase intersection(const RangeMapBase& r) const;
+    RangeMapBase intersection(const RangeMapBase& r) const;
                                                         // get the intersection of this and r
     
-    virtual std::ostream& streamout(std::ostream& os) const;
-                                                        // stream out the range
+    std::ostream& streamout(std::ostream& os) const;    // stream out the range
   protected:
 
     void set_child(const std::list<RangeMapBase>&);     // set a new child range list 
@@ -215,6 +214,7 @@ namespace CppRange {
   // get the size of this range
   template<class T> inline
   T RangeMapBase<T>::size() const {
+    if(child.empty()) return RangeElement<T>::size(); // leaf node
     return size(child) * RangeElement<T>::size();
   }
   
@@ -285,7 +285,9 @@ namespace CppRange {
   // get the intersection of two ranges
   template<class T> inline
   RangeMapBase<T> RangeMapBase<T>::intersection(const RangeMapBase& r) const {
-    return RangeMapBase(RangeElement<T>::intersection(r), intersection(child, r.child));
+    RangeMapBase rv(RangeElement<T>::intersection(r), intersection(child, r.child));
+    if(rv.level != level) return RangeMapBase();
+    else return rv;
   }
   
   // stream out function
@@ -349,9 +351,9 @@ namespace CppRange {
     if(rlist.empty()) return false; // empty child means it is a leaf range
                                     // the emptiness is then depends on the base range
     BOOST_FOREACH(const RangeMapBase& b, rlist)
-      if(!b.empty()) return true; // any non-empty sub-range means non-empty
+      if(!b.empty()) return false;  // any non-empty sub-range means non-empty
 
-    return true;                // all sub-ranges are empty, should be normalized!
+    return true;                    // all sub-ranges are empty, should be normalized!
   }
 
   // check whether 'lhs' is a subset of 'rhs'
@@ -365,7 +367,7 @@ namespace CppRange {
 
     typename std::list<RangeMapBase<T> >::iterator lit, rit;
     for(lit = lhs.begin(), rit = rhs.begin();
-        lit == lhs.end() || rit == rhs.end();
+        lit != lhs.end() && rit != rhs.end();
         ) {
       
       if(!lit->RangeElement<T>::intersection(*rit).empty()) {
@@ -388,7 +390,7 @@ namespace CppRange {
             ++lit;
             *rit = RangeMapBase(rL, rit->child);
           } else {
-            ++lit;
+            ++rit;
             *lit = RangeMapBase(rL, lit->child);
           }
         } else {
@@ -438,7 +440,7 @@ namespace CppRange {
       
     typename std::list<RangeMapBase<T> >::iterator lit, rit;
     for(lit = lhs.begin(), rit = rhs.begin();
-        lit == lhs.end() || rit == rhs.end();
+        lit != lhs.end() && rit != rhs.end();
         ) {
       // using the standard combine function
       RangeMapBase rH, rM, rL;
@@ -507,7 +509,7 @@ namespace CppRange {
     
     typename std::list<RangeMapBase<T> >::iterator lit, rit;
     for(lit = lhs.begin(), rit = rhs.begin();
-        lit == lhs.end() || rit == rhs.end();
+        lit != lhs.end() && rit != rhs.end();
         ) {
       // using the standard combine function
       RangeElement<T> rH, rM, rL;
@@ -521,9 +523,10 @@ namespace CppRange {
 
       if(!rM.empty()) {
         // the two ranges are overlapped
-        RangeMapBase mM(rM);
-        mM.set_child(complement(lit->child, rit->child));
-        rv.push_back(mM);
+        if(!lit->child.empty()) {
+          RangeMapBase mM(rM, complement(lit->child, rit->child));
+          if(lit->level == mM.level) rv.push_back(mM); // avoid empty range
+        }
         
         if(!rL.empty()) {
           if(rL.subset(*lit)) {
@@ -531,7 +534,7 @@ namespace CppRange {
             ++rit; *lit = RangeMapBase<T>(rL, lit->child);
           } else {
             // otherwise lit proceeds and rit recounts
-            ++lit; *rit = RangeMapBase<T>(rL, lit->child);
+            ++lit; *rit = RangeMapBase<T>(rL, rit->child);
           }
         } else {
           // both range list proceed

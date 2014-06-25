@@ -1,105 +1,143 @@
-cppRange
+cppRange (1.0)
 ========
 
-A C++ static multi-dimentional range calculation library.
+A C++ static multi-dimentional range calculation (interval calculation) library.
 
 This library provides a set of operations on static multi-dimension range expressions.
 
 ========
 A mult-dimension static range can be expressed as:
 
-1-bit:           [3:3] or [3]
-1-dimension:     [3:0]
-Multi-dimension: [5:0][2:-1]
+1-bit:           [3:3] or [3]         RangeElement / Range / RangeMap
+1-dimension:     [3:0]                RangeElement / Range / RangeMap
+Multi-dimension: [5:0][2:-1]          Range / RangeMap
 
-* range expression is always expressed as [higher bound : lower bound]. if the lower bound is actually larger than the higher bound, it is illegal, such as [2:3].
+* range expression is always expressed as [higher bound : lower bound]. 
+  if the lower bound is actually larger than the higher bound, it is illegal, such as [2:3].
+
+Three type of range classes are provided for user:
+1. RangeElement
+   A single dimension range expression.
+   Example: [1:0]
+2. Range
+   A multidimensional range expression storing ranges described by a single range vector.
+   Example: [3:0][5:-2]
+3. RangeMap
+   A arbitrary multidimensional range expression.
+   It can store the union of multiple Range object in a tree structure.
+   Therefore, it can be used to store the results of all legal results of 
+   multidimensional range calculations.
+   Example: 
+     [3:0][5:2]                         // a single range vector
+     {[3][5:2];[2:1]{[5:2],[0]};[0][0]} // the union of [3:0][5:2] and  [2:0][0]
+
+========
+The major differences with other range or interval libraries.
+
+The other libraries may be interesting:
+1. Boost Interval Arithmetic Library  
+   http://www.boost.org/doc/libs/1_55_0/libs/numeric/interval/doc/interval.htm
+2. Google Guava Libraries  
+   http://code.google.com/p/guava-libraries/wiki/RangesExplained
+3. SUN C++ Interval Arithmetic Library 
+   http://docs.oracle.com/cd/E19422-01/819-3696/index.html
+
+Compared with the above libraries, cppRange has following differences:
+
+Advantages:
+1. The only one supports multidimensional calculation.
+   For example:
+     No other library can calculate the following expressions:
+     [5:0][0:-5] | [8:4][6:-3]
+     [10:0][10:0] deducted by [3:0][5:5]
+2. Compatible with hardware description languages which also use [high:low] ranges.
+3. Provides a strict order beween range vectors (still inavailable for RangeMap objects).
+
+Disadvantages:
+1. Only support integer ranges. (no support for float/double precision ranges).
+2. Open/close definition is not provided yet. (In developing)
+3. No infinit support. (In developing)
 
 ========
 The supported calculations:
 
-Belong to (>)
-    [7:0] > [3:2]                               true
-    [7:0][4:0][3:-2] > [1:0][3][1:0]            true
-    [5:3][2:0] > [5:1][2:0]                     false
-    [5:3][2:0] > [5:1]                          false (illegal operation)
-* the two range expression must have the same number of dimensions, otherwise illegal.
+1. valid()
+   Check whther the range is a valid range.
+2. empty()
+   Check whether the range is empty.
+3. dimension()
+   Get the dimension of the range.
+4. subset(), proper_subset(), superset(), proper_superset()
+   Get the belonging relations between ranges.
+5. overlap(), connected(), disjoint()
+   Check whether two ranges are overlapped, adjacent, or disjoint.
+6. equal() operator '==' and '!='
+   Check two ranges are equal.
+7. less() operator '>', '>=', '<=', and '<' 
+   A strict order function for all range/range vector (RangeElement and Range).
+8. combine() operator '|'
+   Get the union of two ranges.
+9. hull()
+   Get the minimal ranges containing the two ranges.
+10. intersection() operator '&'
+   Get the shared range among two ranges.
+11 complement()
+   Get the remaining range when deducted by another one.
+11. <<
+   Print the range expression using standard output.
 
-Also available >=, <, <=, ==, !=
+The support for different type of ranges
 
-Combine (|)
-    [7:3] | [4:0]                            -> [7:0]
-    [5:4] | [1:0]                            -> []
-    [4:0][3:1] | [4:0][5:2]                  -> [4:0][5:1]
-    [1:0][5:1] | [4:2][5:1]                  -> [4:0][5:1]
-    [1:0][3:1] | [4:0][5:2]                  -> []
-    [1:0][3:1] | [4:0]                       -> []
-* when combining two multi-dimensional ranges, only one dimension is allowed to be different, otherwise it is not combinable. Also it is combinable only when the two ranges are adjacent.
+                valid() empty() dimension() subset() superset() overlap() connected() disjoint() 
+RangeElement      Y       Y         N         Y          Y        Y          Y           Y
+Range             Y       Y         Y         Y          Y        Y          Y           Y
+RangeMap          Y       Y         Y         Y          Y        Y          N[1]        Y
 
-Overlap (&)
-    [7:3] & [4:0]                            -> [4:3]
-    [5:4] & [1:0]                            -> []
-    [4:0][3:1] & [4:0][5:2]                  -> [4:0][3:2]
-    [2:0][5:1] & [4:2][5:1]                  -> [2:2][5:1]
-    [1:0][3:1] & [4:0][5:2]                  -> [1:0][3:2]
-    [1:0][3:1] & [4:0]                       -> []
-* when combining two multi-dimensional ranges, they must have the same number of dimensions.
+-------
+[1] connect() is normally used to check whether two range can be combined into a 
+single range vector. Since combine() operation is always available for RangeMap, 
+connected() function is useless. Also, it is difficult to define how two set of 
+range vectors are adjacent.
 
-Reduce (-)
-    [7:3] - [4:0]                            -> [7:5]
-    [5:4] - [1:0]                            -> [5:4]
-    [4:0][3:1] - [4:0][5:2]                  -> [4:0][1]
-    [2:0][5:1] - [4:2][5:1]                  -> [1:0][5:1]
-    [1:0][3:1] - [4:0][5:2]                  -> []
-    [1:0][3:1] - [4:0]                       -> []
-* when reducing two multi-dimensional ranges, only one dimension is allowed to be different, otherwise it is not deductable. 
+                equal() less() combine() hull() intersection() complement() <<
+RangeElement      Y       Y        Y[2]    Y          Y            Y[2]      Y
+Range             Y       Y        Y[2]    Y          Y            Y[2]      Y
+RangeMap          Y       N[3]     Y       N[4]       Y            Y         Y
 
-Standard division (^)
-    [7:3] ^ [4:0]                            -> [7:5],[4:3],[2:0]
-    [5:4] ^ [1:0]                            -> []
-    [4:0][3:1] ^ [4:0][5:2]                  -> [4:0][5:4],[4:0][3:2],[4:0][1:1]
-    [2:0][5:1] ^ [4:2][5:1]                  -> [4:2][5:1],[2:2][5:1],[1:0][5:1]
-    [1:0][3:1] ^ [4:0][5:2]                  -> []
-    [1:0][3:1] ^ [4:0]                       -> []
-* A ^ B = {High, A&B, Low}
-* Only one dimension is allowed to be different, and the two range should be adjacent.
-
-========
-
-Constructors:
-
-//Build a range element (single dimension) [5:0]
-
-RangeElement<int> r_int(5,0);
-
-RangeElement<double> r_int;
-r.first() = 5;
-r.second() = 0;
-
-//Build a multi-dimensional range [7:4][2:0] 
-
-Range<unsigned int> r_uint;
-r_uint.push_back(RangeElement<unsigned int>(7,4));
-r_unit.push_back(RangeElement<unsigned int>(2,0));
-
-std::list<RangeElement<float> > r_list;
-r_list.push_back(RangeElement<float>(7,4));
-r_list.push_back(RangeElement<float>(2,0));
- Range<flost> r_float(r_list);
+-------
+[2] When the result can not be represented, a empty range is returned. 
+    For example, it is impossible to represent the result of
+      [2:0] | [5:4]
+    In this case, the range should be represented using RangeMap and the results will
+    be stored as a set of ranges:
+      {[5:4];[2:0]}
+[3] It is extremely difficult to provide a strict order for RangeMap.
+    Considering this exmaple
+    ? {[10:3][1:0];[2:0][3:0]} > {[10][1:0];[9:8][3:0];[3:0][3:0]}
+[4] hull() is used when the union of two ranges cannot be represented by a single range.
+    For RangeMap, the result of combine() and hull() are always the same.
 
 ========
+Class inheritage
 
-To print a range
+RangeElement
+    \___________Range                       (public inherit)
+    \___________RangeMapBase                (public inherit)
+                   \__________RangeMap      (child list)
 
-std::cout << RangeElement(5,3) << std::endl;
-// [5:3]
+========
+Library requirement
+Boost Library
 
-std::cout << RangeElement(5,5) << std::endl;
-// [5]
+========
+For more information, using the test cases provided in ~/test.
+A GNU Make file is provided.
 
-std::cout << RangeElement(5,5,false) << std::endl;
-// [5:5]
-// not compressed!
 
-std::cout << r_float << std::endl;
-// [7.0:4.0][2.0:0.0]
+Wei Song
+wsong83@gmail.com
+IT 302 Computer Science
+University of Manchester
+M13 9PL UK
 
+25/06/2014

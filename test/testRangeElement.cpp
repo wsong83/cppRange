@@ -24,9 +24,9 @@
  *
  */
 
+#include <iostream>
 #include "cpp_range.hpp"
 #include "test_util.hpp"
-#include <iostream>
 
 using namespace CppRange;
 using std::cout;

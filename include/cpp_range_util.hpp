@@ -87,7 +87,10 @@ namespace CppRange {
     std::list<RangeElement<T> > rv;
     
     // pattern to find a range
-    boost::xpressive::sregex token = ('[' | '(') >> [0-9.:]* >> (')' | ']'); 
+    boost::xpressive::sregex token = 
+      ('[' | '(') 
+      >> *(~(boost::xpressive::set = '[','(',')',']')) 
+      >> (')' | ']'); 
 
     boost::xpressive::wsregex_iterator cur(str.begin(), str.end(), token);
     boost::xpressive::wsregex_iterator end;

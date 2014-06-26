@@ -340,7 +340,9 @@ namespace CppRange {
   template<class T> inline
   bool RangeMapBase<T>::valid(const std::list<RangeMapBase>& rlist, unsigned int l) {
     BOOST_FOREACH(const RangeMapBase& b, rlist)
-      if(!b.valid() || l != b.level) return false;
+      if(!b.valid() || l != b.level) {
+        return false;
+      }
     return true;
   }
 

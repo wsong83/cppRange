@@ -118,6 +118,7 @@ namespace CppRange {
     divide(const Range& r) const;                       // standard divide/partition this and r
     
     std::ostream& streamout(std::ostream& os) const;    // stream out the range
+    std::string toString() const;                       // simple conversion to string 
 
   private:
     bool comparable(const Range& r) const;              // ? this and r can be compared 
@@ -263,11 +264,20 @@ namespace CppRange {
   // check whether this is a subset of r
   template<class T> inline
   bool Range<T>::subset(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return true;
     if(r.empty()) return false;
-    if(!comparable(r)) return false; // or throw an exception
-
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "subset()"));
+#endif
+      return false; // or throw an exception
+    }
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].subset(r[i])) 
         return false;
@@ -278,10 +288,20 @@ namespace CppRange {
   // check whether this is a proper subset of r
   template<class T> inline
   bool Range<T>::proper_subset(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return !r.empty();
     if(r.empty()) return false;
-    if(!comparable(r)) return false; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "proper_subset()"));
+#endif
+      return false; // or throw an exception
+    }
     
     bool proper = false;
     for(unsigned int i=0; i<r_array.size(); i++) {
@@ -298,10 +318,20 @@ namespace CppRange {
   // check whether this is a superset of r
   template<class T> inline
   bool Range<T>::superset(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(r.empty()) return true;
     if(empty()) return false;
-    if(!comparable(r)) return false; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "superset()"));
+#endif
+      return false; // or throw an exception
+    }
 
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].superset(r[i])) 
@@ -313,10 +343,20 @@ namespace CppRange {
   // check whether this is a proper superset of r
   template<class T> inline
   bool Range<T>::proper_superset(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(r.empty()) return !empty();
     if(empty()) return false;
-    if(!comparable(r)) return false; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "proper_superset()"));
+#endif
+      return false; // or throw an exception
+    }
 
     bool proper = false;
     for(unsigned int i=0; i<r_array.size(); i++) {
@@ -333,16 +373,31 @@ namespace CppRange {
   // check whether this range is a singleton range
   template<class T> inline
   bool Range<T>::singleton() const {
-    if(!valid()) return false;
+    if(!valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return empty() || size() == min_unit<T>();
   }  
   
   // check whether r is equal with this range
   template<class T> inline
   bool Range<T>::equal(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return r.empty();
-    if(!comparable(r)) return false; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "=="));
+#endif
+      return false; // or throw an exception
+    }
 
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].equal(r.r_array[i]))
@@ -354,9 +409,19 @@ namespace CppRange {
   // check whether the range and this range are adjacent
   template<class T> inline
   bool Range<T>::connected(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty() || r.empty()) return false;
-    if(!comparable(r)) return false;
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "connected()"));
+#endif
+      return false; // or throw an exception
+    }
     
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].equal(r.r_array[i])) {
@@ -370,10 +435,20 @@ namespace CppRange {
   // weak order
   template<class T> inline
   bool Range<T>::less(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return !r.empty();
     if(r.empty()) return false;
-    if(!comparable(r)) return false; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "<"));
+#endif
+      return false; // or throw an exception
+    }
     
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].equal(r.r_array[i]))
@@ -385,9 +460,19 @@ namespace CppRange {
   // whether this and r has non-empty intersection
   template<class T> inline
   bool Range<T>::overlap(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty() || r.empty())  return false;
-    if(!comparable(r)) return false; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "overlap()"));
+#endif
+      return false; // or throw an exception
+    }
 
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].overlap(r.r_array[i]))
@@ -399,9 +484,19 @@ namespace CppRange {
   // whether this and r have no shared range
   template<class T> inline
   bool Range<T>::disjoint(const Range& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty() || r.empty())  return true;
-    if(!comparable(r)) return false; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "disjoint()"));
+#endif
+      return false; // or throw an exception
+    }
 
     for(unsigned int i=0; i<r_array.size(); i++) {
       if(!r_array[i].overlap(r.r_array[i]))
@@ -413,10 +508,26 @@ namespace CppRange {
   // combine two ranges
   template<class T> inline
   Range<T> Range<T>::combine(const Range& r) const {
-    if(!valid() || !r.valid()) return Range();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return Range();
+    }
     if(empty()) return r;
     if(r.empty()) return *this;
-    if(!operable(r)) return Range(); // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "|"));
+#endif
+      return Range(); // or throw an exception
+    }
+    if(!operable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonOperable(toString(), r.toString(), "|"));
+#endif
+      return Range(); // or throw an exception
+    }
 
     Range rv;
     rv.r_array.resize(r_array.size());
@@ -428,10 +539,20 @@ namespace CppRange {
   // get the minimal range contain the two ranges
   template<class T> inline
   Range<T> Range<T>::hull(const Range& r) const {
-    if(!valid() || !r.valid()) return Range();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return Range();
+    }
     if(empty()) return r;
     if(r.empty()) return *this;
-    if(!comparable(r)) return Range(); // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "hull()"));
+#endif
+      return Range(); // or throw an exception
+    }
 
     Range rv;
     rv.r_array.resize(r_array.size());
@@ -443,9 +564,19 @@ namespace CppRange {
   // get the shared range
   template<class T> inline
   Range<T> Range<T>::intersection(const Range& r) const {
-    if(!valid() || !r.valid()) return Range();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return Range();
+    }
     if(empty() || r.empty()) return Range();
-    if(!comparable(r)) return Range(); // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "&"));
+#endif
+      return Range(); // or throw an exception
+    }
 
     Range rv;
     rv.r_array.resize(r_array.size());
@@ -457,10 +588,26 @@ namespace CppRange {
   //subtraction
   template<class T> inline
   Range<T> Range<T>::complement(const Range& r) const {
-    if(!valid() || !r.valid()) return Range();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return Range();
+    }
     if(empty()) return Range();
     if(r.empty()) return *this;
-    if(!operable(r)) return Range(); // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "complement()"));
+#endif
+      return Range(); // or throw an exception
+    }
+    if(!operable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonOperable(toString(), r.toString(), "complement()"));
+#endif
+      return Range(); // or throw an exception
+    }
 
     Range rv(r);
     rv.r_array.resize(r_array.size());
@@ -479,13 +626,29 @@ namespace CppRange {
   boost::tuple<Range<T>, Range<T>, Range<T> >
   Range<T>::divide(const Range& r) const {
     boost::tuple<Range, Range, Range > rv;
-    if(!valid() || !r.valid()) return rv;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return rv;
+    }
     if(empty() || r.empty()) {
       boost::get<1>(rv) = hull(r);
       return rv;
     }
     
-    if(!operable(r)) return rv; // or throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "divide()"));
+#endif
+      return rv; // or throw an exception
+    }
+    if(!operable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonOperable(toString(), r.toString(), "divide()"));
+#endif
+      return rv; // or throw an exception
+    }
 
     boost::get<0>(rv) = r;
     boost::get<1>(rv) = r;
@@ -523,6 +686,17 @@ namespace CppRange {
     return os;
   }
 
+  // convert to string
+  template<class T> inline
+  std::string Range<T>::toString() const {
+    std::string rv;
+    if(empty()) rv = "[]";
+    else {
+      for(unsigned int i=0; i<r_array.size(); i++)
+        rv += r_array[i].toString();
+    }
+    return rv;
+  }
 
   //////////////////////////////////////////////
   // Protected Helpers
@@ -562,7 +736,12 @@ namespace CppRange {
   // rhs range is less than or equal to lhs
   template <class T>
   bool operator>= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid()) return false;
+    if(!lhs.valid() || !rhs.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return rhs.less(lhs) || lhs.equal(rhs);
   }
 
@@ -575,7 +754,12 @@ namespace CppRange {
   // lhs range is larger than or equal to rhs
   template <class T>
   bool operator<= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid()) return false;
+    if(!lhs.valid() || !rhs.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return lhs.less(rhs) || lhs.equal(rhs);
   }
   
@@ -588,7 +772,12 @@ namespace CppRange {
   // two ranges are not equal
   template <class T>
   inline bool operator!= (const Range<T>& lhs, const Range<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid()) return false;
+    if(!lhs.valid() || !rhs.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return !rhs.equal(lhs);
   }
 

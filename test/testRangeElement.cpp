@@ -40,6 +40,7 @@ using std::string;
 int main() {
 
   unsigned int index = 0;
+  std::string result;
 
   /////////////////////////////////////////////////////////////
   cout << "===========================" << endl;
@@ -208,27 +209,87 @@ int main() {
 
   // compare with an invalid range
   cout << ++index << ". RB > RE ?" ;
-  if(!test(toString(RB > RE), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RB > RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RB > RE);
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RB >= RE ?" ;
-  if(!test(toString(RB >= RE), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RB >= RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RB >= RE);
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
   
   cout << ++index << ". RB == RE ?" ;
-  if(!test(toString(RB == RE), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RB == RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RB == RE);
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
   
   cout << ++index << ". RB != RE ?" ;
-  if(!test(toString(RB != RE), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RB != RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RB != RE);
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
   
   cout << ++index << ". RB <= RE ?" ;
-  if(!test(toString(RB <= RE), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RB <= RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RB <= RE);
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
   
   cout << ++index << ". RB < RE ?" ;
-  if(!test(toString(RB < RE), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RB < RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RB < RE);
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
 
@@ -318,19 +379,59 @@ int main() {
   if(!test(toString(RangeElement<int>().proper_superset(RangeElement<int>())), "0", false, cout)) return 1;
 
   cout << ++index << ". RA is a subset of RE ?" ;
-  if(!test(toString(RA.subset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.subset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.subset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is a proper subset of RE ?" ;
-  if(!test(toString(RA.proper_subset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.proper_subset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.proper_subset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is a superset of RE ?" ;
-  if(!test(toString(RA.superset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.superset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.superset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is a proper superset of RE ?" ;
-  if(!test(toString(RA.proper_superset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.proper_superset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.proper_superset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -365,7 +466,17 @@ int main() {
   if(!test(toString(RangeElement<int>(5,0) & RangeElement<int>(0,-10)), "[0]", false, cout)) return 1;  
 
   cout << ++index << ". RA & RE =>" ;
-  if(!test(toString(RA & RE), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA & RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA & RE);
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -394,14 +505,34 @@ int main() {
   if(!test(toString(RangeElement<int>() | RangeElement<int>()), "[]", false, cout)) return 1;
 
   cout << ++index << ". [5:3] | [0:-10] =>" ;
-  if(!test(toString(RangeElement<int>(5,3) | RangeElement<int>(0,-10)), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RangeElement<int>(5,3) | RangeElement<int>(0,-10));
+  } catch ( RangeException_NonPresentable e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RangeElement<int>(5,3) | RangeElement<int>(0,-10));
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *Cannot be calculated using RangeElement, using RangeMap instead.")) return 1;
 
   cout << ++index << ". [5:1] | [0:-10] =>" ;
   if(!test(toString(RangeElement<int>(5,0) | RangeElement<int>(0,-10)), "[5:-10]", false, cout)) return 1;  
 
   cout << ++index << ". RA | RE =>" ;
-  if(!test(toString(RA | RE), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA | RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA | RE);
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -436,7 +567,17 @@ int main() {
   if(!test(toString(RangeElement<int>(5,0).hull(RangeElement<int>(0,-10))), "[5:-10]", false, cout)) return 1;  
 
   cout << ++index << ". the minimal range contains RA and RE ?" ;
-  if(!test(toString(RA.hull(RE)), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.hull(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA.hull(RE));
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -465,7 +606,17 @@ int main() {
   if(!test(toString(RangeElement<int>().complement(RangeElement<int>())), "[]", false, cout)) return 1;
 
   cout << ++index << ". [10:0] deducted by [3:2] ?" ;
-  if(!test(toString(RangeElement<int>(10,0).complement(RangeElement<int>(3,2))), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RangeElement<int>(10,0).complement(RangeElement<int>(3,2)));
+  } catch ( RangeException_NonPresentable e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RangeElement<int>(10,0).complement(RangeElement<int>(3,2)));
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *Cannot be calculated using RangeElement, using RangeMap instead.")) return 1;
 
   cout << ++index << ". [10:0] deducted by [0] ?" ;
@@ -475,7 +626,17 @@ int main() {
   if(!test(toString(RangeElement<int>(10,0).complement(RangeElement<int>(10,8))), "[7:0]", false, cout)) return 1;  
 
   cout << ++index << ". RA deducted by RE ?" ;
-  if(!test(toString(RA.complement(RE)), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.complement(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA.complement(RE));
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -516,7 +677,17 @@ int main() {
   if(!test(toString(RangeElement<int>(2,0).divide(RangeElement<int>(10,3))), "[10:3];[];[2:0]", false, cout)) return 1;
 
   cout << ++index << ". RA divided by RE ?" ;
-  if(!test(toString(RA.divide(RE)), "[];[];[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.divide(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[];[];[]";
+  }
+#else
+  result = toString(RA.divide(RE));
+#endif
+  if(!test(result, "[];[];[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -599,15 +770,45 @@ int main() {
   if(!test(toString(RangeElement<int>(10,0).disjoint(RangeElement<int>(3,2))), "0", false, cout)) return 1;
 
   cout << ++index << ". RA overlaps with RE ?";
-  if(!test(toString(RA.disjoint(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.overlap(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.overlap(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is adjacent with RE ?";
-  if(!test(toString(RA.disjoint(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.connected(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.connected(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is disjoint with RE ?";
-  if(!test(toString(RA.disjoint(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.disjoint(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.disjoint(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   // dimension

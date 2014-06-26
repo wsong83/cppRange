@@ -32,6 +32,7 @@
 #include <ostream>
 #include <algorithm>
 #include <boost/tuple/tuple.hpp>
+#include <boost/lexical_cast.hpp>
 #include "cpp_range_define.hpp"
 #include "cpp_range_util_def.hpp"
 
@@ -94,6 +95,7 @@ namespace CppRange {
     divide(const RangeElement& r) const;                // standard divide/partition this and r
     
     std::ostream& streamout(std::ostream& os) const;    // stream out the range
+    std::string toString() const;                       // simple conversion to string 
   };
 
 }
@@ -177,11 +179,16 @@ namespace CppRange {
   bool RangeElement<T>::in(T num) const {
     return !empty() && !(num > upper()) && !(num < lower());
   }
-
+  
   // check this is a subset of r 
   template<class T> inline
   bool RangeElement<T>::subset(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return true;
     if(r.empty()) return false;
     return !(r.upper() < upper()) && !(lower() < r.lower());      
@@ -196,7 +203,12 @@ namespace CppRange {
   // check this is a superset of r
   template<class T> inline
   bool RangeElement<T>::superset(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(r.empty()) return true;
     if(empty()) return false;
     return !(upper() < r.upper()) && !(r.lower() < lower());      
@@ -211,14 +223,24 @@ namespace CppRange {
   // check whether this range is a singleton range
   template<class T> inline
   bool RangeElement<T>::singleton() const {
-    if(!valid()) return false;
+    if(!valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return empty() || size() == min_unit<T>();
   }  
 
   // check whether this is equal with r
   template<class T> inline
   bool RangeElement<T>::equal(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return r.empty();
     if(r.empty()) return false;
     return (upper() == r.upper()) && (r.lower() == lower());
@@ -227,7 +249,12 @@ namespace CppRange {
   // check whether r is adjacent to this range
   template<class T> inline
   bool RangeElement<T>:: connected(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty() || r.empty()) return false;
     return 
       (!(upper() + min_unit<T>() < r.lower()) 
@@ -237,7 +264,12 @@ namespace CppRange {
   // weak order
   template<class T> inline
   bool RangeElement<T>::less(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return !r.empty();
     if(r.empty()) return false;
     if(upper() < r.upper()) return true;
@@ -250,7 +282,12 @@ namespace CppRange {
   // check whether r has a shared range with this range
   template<class T> inline
   bool RangeElement<T>::overlap(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty() || r.empty()) return false;
     return !(upper() < r.lower()) && !(r.upper() < lower());
   }
@@ -258,7 +295,12 @@ namespace CppRange {
   // check whether r does not have a shared range with this range
   template<class T> inline
   bool RangeElement<T>::disjoint(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty() || r.empty()) return true;
     return (upper() < r.lower()) || (r.upper() < lower());
   }
@@ -266,17 +308,30 @@ namespace CppRange {
   // union to ranges
   template<class T> inline
   RangeElement<T> RangeElement<T>::combine(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return RangeElement();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return RangeElement();
+    }
     if(empty()) return r;
     if(r.empty()) return *this;
     if(connected(r)) return hull(r); 
+#ifndef CPP_RANGE_NO_EXCEPTION
+    throw(RangeException_NonPresentable(toString(), r.toString(), "|"));
+#endif
     return RangeElement(); // or throw an exception
   }
   
   // the minimal range to contain both this and r
   template<class T> inline
   RangeElement<T> RangeElement<T>::hull(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return RangeElement();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return RangeElement();
+    }
     if(empty()) return r;
     if(r.empty()) return *this;
     return RangeElement(std::max(upper(), r.upper()),
@@ -286,7 +341,12 @@ namespace CppRange {
   // intersection
   template<class T> inline
   RangeElement<T> RangeElement<T>::intersection(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return RangeElement();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return RangeElement();
+    }
     if(empty() || r.empty()) return RangeElement();
     return RangeElement(std::min(upper(), r.upper()),
                         std::max(lower(), r.lower()));
@@ -295,7 +355,12 @@ namespace CppRange {
   // subtraction
   template<class T> inline
   RangeElement<T> RangeElement<T>::complement(const RangeElement& r) const {
-    if(!valid() || !r.valid()) return RangeElement();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return RangeElement();
+    }
     if(empty()) return RangeElement();
     if(r.empty()) return *this;
     
@@ -308,6 +373,10 @@ namespace CppRange {
       rv.lower(RAnd.upper() + min_unit<T>());
     if(lower() != RAnd.lower())
       rv.upper(RAnd.lower() - min_unit<T>());
+#ifndef CPP_RANGE_NO_EXCEPTION
+    if(!rv.valid()) 
+      throw(RangeException_NonPresentable(toString(), r.toString(), "complement()"));
+#endif    
     return rv;
   }
 
@@ -316,7 +385,12 @@ namespace CppRange {
   boost::tuple<RangeElement<T>, RangeElement<T>, RangeElement<T> > 
   RangeElement<T>::divide(const RangeElement& r) const {
     boost::tuple<RangeElement, RangeElement, RangeElement > rv;
-    if(!valid() || !r.valid()) return rv;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return rv;
+    }
     if(empty() || r.empty()) {
       boost::get<1>(rv) = hull(r);
       return rv;
@@ -353,6 +427,16 @@ namespace CppRange {
     return os;
   }
 
+  // convert to string
+  template<class T> inline
+  std::string RangeElement<T>::toString() const {
+    return 
+      "[" +
+      boost::lexical_cast<std::string>(upper()) +
+      ":" +
+      boost::lexical_cast<std::string>(lower()) +
+      "]";
+  }
 
   /////////////////////////////////////////////
   // overload operators
@@ -366,7 +450,12 @@ namespace CppRange {
   // rhs range is less than or equal to lhs
   template <class T>
   bool operator>= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid()) return false;
+    if(!lhs.valid() || !rhs.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return rhs.less(lhs) || lhs.equal(rhs);
   }
 
@@ -379,7 +468,12 @@ namespace CppRange {
   // lhs range is larger than or equal to rhs
   template <class T>
   bool operator<= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid()) return false;
+    if(!lhs.valid() || !rhs.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return lhs.less(rhs) || lhs.equal(rhs);
   }
   
@@ -392,7 +486,12 @@ namespace CppRange {
   // two ranges are not equal
   template <class T>
   inline bool operator!= (const RangeElement<T>& lhs, const RangeElement<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid()) return false;
+    if(!lhs.valid() || !rhs.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return !rhs.equal(lhs);
   }
 

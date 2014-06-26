@@ -65,7 +65,7 @@ int main() {
   if(!test(toString(RA.size()), "18", false, cout)) return 1;
 
   cout << ++index << ". construct and print a valid integer range RB [12:-3] =>";
-  RangeElement<int> RB(12,-3);
+  RangeElement<int> RB("[12:-3]");
   if(!test(toString(RB), "[12:-3]", false, cout)) return 1;
 
   cout << ++index << ". is RB valid ?";

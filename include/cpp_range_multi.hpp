@@ -66,6 +66,7 @@ namespace CppRange {
     explicit Range(const std::vector<std::pair<T,T> >&);
                                                         // construct from a vector of 
                                                         // raw range pairs
+    Range(const std::string&);                          // build from parsing a range text
 
     //////////////////////////////////////////////
     // helpers
@@ -159,6 +160,12 @@ namespace CppRange {
     typedef std::pair<T,T> local_range_pair;
     BOOST_FOREACH(const local_range_pair& r, l)
       r_array[i++]=RangeElement<T>(r.first, r.second);   
+  }
+
+  // parse a range text
+  template<class T> inline
+  Range<T>::Range(const std::string& str) {
+    *this = Range(parse_range_list<T>(str));
   }
 
   //////////////////////////////////////////////

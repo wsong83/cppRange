@@ -134,6 +134,16 @@ For more information, using the test cases provided in ~/test.
 A GNU Make file is provided.
 
 
+========
+References:
+[1] Boost Interval Arithmetic Library. [Online] http://www.boost.org/doc/libs/1_55_0/libs/numeric/interval/doc/interval.htm
+[2] Google Guava Libraries  [Online] http://code.google.com/p/guava-libraries/wiki/RangesExplained
+[3] SUN C++ Interval Arithmetic Library [Online] http://docs.oracle.com/cd/E19422-01/819-3696/index.html
+[4] http://en.wikipedia.org/wiki/Set_%28mathematics%29
+[5] http://www.cs.utep.edu/interval-comp/intsoft.html
+[6] Moore, R.E., Kearfott, R.B. and Cloud, M.J. "Introduction to Interval Analysis". SIAM, 2009.
+
+
 Wei Song
 wsong83@gmail.com
 IT 302 Computer Science

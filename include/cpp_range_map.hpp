@@ -62,6 +62,7 @@ namespace CppRange {
     explicit RangeMap(const std::list<Range<T> >&);
                                                         // build from a list of 
                                                         // multidimensional range
+    RangeMap(const std::string&);                       // build from parsing a range text
   private:
     explicit RangeMap(const std::list<RangeMapBase<T> >&);
                                                         // build from a list of 
@@ -137,7 +138,7 @@ namespace CppRange {
   RangeMap<T>::RangeMap(const std::list<RangeElement<T> >& rlist)  
     : level(0) {
     BOOST_FOREACH(const RangeElement<T>& r, rlist)
-      RangeMapBase<T>::add_child(RangeMapBase<T>(r));
+      RangeMapBase<T>::add_child(child, RangeMapBase<T>(r));
     if(!child.empty()) level = child.front().dimension();   
   }
 
@@ -158,7 +159,11 @@ namespace CppRange {
     if(!child.empty()) level = child.front().dimension();
   }
  
-
+  // parse a range text
+  template<class T> inline
+  RangeMap<T>::RangeMap(const std::string& str) {
+    *this = RangeMap(Range<T>(parse_range_list<T>(str)));
+  }
 
   //////////////////////////////////////////////
   // Helpers

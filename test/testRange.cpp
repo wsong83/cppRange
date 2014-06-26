@@ -126,7 +126,7 @@ int main() {
            "\n  *invalid range is always 0.")) return 1;
 
   cout << ++index << ". construct and print a valid integer range RF [3:0][12:-5][0] =>";
-  Range<int> RF(RA); RF.add_lower(RangeElement<int>(0));
+  Range<int> RF("[3:0][12:-5][0]");
   if(!test(toString(RF), "[3:0][12:-5][0]", false, cout)) return 1;
 
   cout << ++index << ". is RF valid ?";

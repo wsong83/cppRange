@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <boost/tuple/tuple.hpp>
 #include "cpp_range_define.hpp"
+#include "cpp_range_util_def.hpp"
 
 namespace CppRange {
 
@@ -57,6 +58,7 @@ namespace CppRange {
     RangeElement();
     RangeElement(const T&);                             // single bit range
     RangeElement(const T& upper_bound, const T& lower_bound);
+    RangeElement(const std::string&);                   // build from parsing a string
 
     //////////////////////////////////////////////
     // Helpers
@@ -94,6 +96,12 @@ namespace CppRange {
     std::ostream& streamout(std::ostream& os) const;    // stream out the range
   };
 
+}
+
+#include "cpp_range_util.hpp"
+
+namespace CppRange {
+
   /////////////////////////////////////////////
   // implementation of class methods
 
@@ -113,6 +121,12 @@ namespace CppRange {
   template<class T> inline
   RangeElement<T>::RangeElement(const T& rh, const T& rl)
     : initialized(true), r_pair(rh, rl) {}
+
+  // parse a range text
+  template<class T> inline
+  RangeElement<T>::RangeElement(const std::string& str) {
+    *this = parse_range<T>(str);
+  }
 
   // helpers
 

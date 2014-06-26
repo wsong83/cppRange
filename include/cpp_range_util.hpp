@@ -71,7 +71,6 @@ namespace CppRange {
       return RangeElement<T>(boost::lexical_cast<T>(fields[1]));
     }
     case 4: {
-      std::cout << fields[0] << ":" << fields[1] <<  std::endl;
       return RangeElement<T>(boost::lexical_cast<T>(fields[1]),
                              boost::lexical_cast<T>(fields[2])
                              );
@@ -85,20 +84,22 @@ namespace CppRange {
   template<class T>
   std::list<RangeElement<T> > parse_range_list(const std::string& str) {
     // parse something like [5:3][2:1]
+
+    using namespace boost::xpressive;
     
     std::list<RangeElement<T> > rv;
     
     // pattern to find a range
-    boost::xpressive::sregex token = 
-      ('[' | '(') 
-      >> *(~(boost::xpressive::set = '[','(',')',']')) 
-      >> (')' | ']'); 
+    sregex token = 
+      (as_xpr('[') | '(') 
+      >> *(~(set = '[','(',')',']'))
+      >> (as_xpr(')') | ']'); 
 
-    boost::xpressive::sregex_iterator cur(str.begin(), str.end(), token);
-    boost::xpressive::sregex_iterator end;
+    sregex_iterator cur(str.begin(), str.end(), token);
+    sregex_iterator end;
 
     for(; cur != end; ++cur) {
-      const boost::xpressive::smatch& what = *cur;
+      const smatch& what = *cur;
       rv.push_back(parse_range<T>(what[0]));
     }
     

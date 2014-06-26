@@ -1,16 +1,18 @@
-* Support infinite.
-* Support open and close ranges.
-* Add a detailed documents.
-* Add rational treasons in the document.
-* Explain why less rather than enclose is chosen as partial order
-* allow throw an exception 
-* add support from string to range
+Features
+        * [High]   Allow throwing exception when some illegal range operation is done. Currently 
+                   the result is assigned to empty silently. User may not notice the error, which 
+                   may results in misunderstanding or difficulties in debug.
+        * [Median] Support infinit boundaries, which is useful for mathematical calculations.
+        * [Median] Add support for open/close bound types notation. Currently all boundaries are 
+                   assumed close. This is useful for general mathematical calculations.
+        * [Low]    Considering support float/double ranges. However, is it really useful when other
+                   libraries are dedicated to real ranges. Maybe multidimensional calculation is
+                   still missing, but it will be very difficult to do for real ranges.
+        
+Documentation
+        * [Median] Build up a website to explain the library. Currently a README is provided.
+        * [Low]    Explain the reasons in creating this library.
+        * [Low]    Explain why build the strict order less() is this way and how RangeMap is not 
+                   supported.
+        * [Low]    Add more user examples.
 
-
-reference :
-Boost Interval Arithmetic Library  http://www.boost.org/doc/libs/1_55_0/libs/numeric/interval/doc/interval.htm
-Google Guava Libraries  http://code.google.com/p/guava-libraries/wiki/RangesExplained
-SUN C++ Interval Arithmetic Library http://docs.oracle.com/cd/E19422-01/819-3696/index.html
-http://en.wikipedia.org/wiki/Set_%28mathematics%29
-http://www.cs.utep.edu/interval-comp/intsoft.html
-Moore, R.E., Kearfott, R.B. and Cloud, M.J. Introduction to Interval Analysis. SIAM, 2009

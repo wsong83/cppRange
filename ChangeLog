@@ -1,0 +1,13 @@
+===========================
+Release 1.01    ??/06/2014
+        * Allow construct a range from a string (range text)
+            Example:  new RangeMap<int>("[6:0][0][3:-4]");
+
+===========================
+Release 1.0     25/06/2014
+        * The first release.
+        * Provide three C++ classes for user:
+                RangeElement            A single range expression.
+                Range                   A multidimensional range vector.
+                RangeMap                An arbitrary set of multiple range vectors
+                                        with the same dimension.

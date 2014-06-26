@@ -33,10 +33,10 @@
 namespace CppRange {
 
   // forward decaration
-  template<class T> RangeElement;
-  template<class T> Range;
-  template<class T> RangeMapBase;
-  template<class T> RangeMap;
+  template<class T> class RangeElement;
+  template<class T> class Range;
+  template<class T> class RangeMapBase;
+  template<class T> class RangeMap;
   
   // parse a string into a range element
   template<class T>

@@ -27,6 +27,9 @@
 #ifndef _CPP_RANGE_H_
 #define _CPP_RANGE_H_
 
+// forward definitions of the utility functions
+#include "cpp_range_util_def.hpp"
+
 // RangeElement
 #include "cpp_range_element.hpp"
 
@@ -38,5 +41,8 @@
 // Allow arbitrary different dimensions
 #include "cpp_range_map_base.hpp"
 #include "cpp_range_map.hpp"
+
+// the utility function
+#include "cpp_range_util.hpp"
 
 #endif

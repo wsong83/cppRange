@@ -27,6 +27,12 @@
 #ifndef _CPP_RANGE_UTIL_H_
 #define _CPP_RANGE_UTIL_H_
 
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/xpressive/xpressive.hpp>
+#include <list>
+#include <string>
+
 // just in case this header is used separately
 #include "cpp_range_util_def.hpp"
 
@@ -34,11 +40,6 @@
 #include "cpp_range_element.hpp"
 #endif
 
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/xpressive/xpressive.hpp>
-#include <list>
-#include <string>
 
 namespace CppRange {
 
@@ -49,29 +50,30 @@ namespace CppRange {
 
   // parse a simple range
   template<class T>
-  RangeElement<T> paser_range(const std::string& str_arg) {
+  RangeElement<T> parse_range(const std::string& str_arg) {
     // parse something like "[3:0]", "[4]" or even "[]"
 
     std::string str(str_arg);
-    if(str.length() < 2) return rv; // throw e
+    if(str.length() < 2) return RangeElement<T>(); // throw e
 
     // for future use, current assume both bound types are closed
-    char upper_bound_type = str[0];
-    char lower_bound_type = str[str.length()-1];
+    // char upper_bound_type = str[0];
+    // char lower_bound_type = str[str.length()-1];
 
     // get the two range boundary values
-    std::vector<string> fields;
+    std::vector<std::string> fields;
     boost::split(fields, str, boost::is_any_of("[:]"), boost::token_compress_on);
     switch(fields.size()) {
-    case 0: {
+    case 2: {
       return RangeElement<T>();
     }
-    case 1: {
-      return RangeElement<T>(boost::lexi_cast<T>(fields[0]));
+    case 3: {
+      return RangeElement<T>(boost::lexical_cast<T>(fields[1]));
     }
-    case 2: {
-      return RangeElement<T>(boost::lexi_cast<T>(fields[0]),
-                             boost::lexi_cast<T>(fields[1])
+    case 4: {
+      std::cout << fields[0] << ":" << fields[1] <<  std::endl;
+      return RangeElement<T>(boost::lexical_cast<T>(fields[1]),
+                             boost::lexical_cast<T>(fields[2])
                              );
     }
     default:                   // error, should throw e
@@ -81,7 +83,7 @@ namespace CppRange {
 
   // parse a simple range vector
   template<class T>
-  std::list<RangeElement<T> > paser_range_list(const std::string& str) {
+  std::list<RangeElement<T> > parse_range_list(const std::string& str) {
     // parse something like [5:3][2:1]
     
     std::list<RangeElement<T> > rv;
@@ -92,17 +94,17 @@ namespace CppRange {
       >> *(~(boost::xpressive::set = '[','(',')',']')) 
       >> (')' | ']'); 
 
-    boost::xpressive::wsregex_iterator cur(str.begin(), str.end(), token);
-    boost::xpressive::wsregex_iterator end;
+    boost::xpressive::sregex_iterator cur(str.begin(), str.end(), token);
+    boost::xpressive::sregex_iterator end;
 
     for(; cur != end; ++cur) {
       const boost::xpressive::smatch& what = *cur;
-      rv.push_back(parse_range(what[0]));
+      rv.push_back(parse_range<T>(what[0]));
     }
     
     return rv;
   }
-
+  
 }
 
 #endif

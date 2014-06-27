@@ -90,6 +90,7 @@ namespace CppRange {
                                                         // get the intersection of this and r
     
     std::ostream& streamout(std::ostream& os) const;    // stream out the range
+    std::string toString() const;                       // simple conversion to string 
   protected:
 
     void set_child(const std::list<RangeMapBase>&);     // set a new child range list 
@@ -120,6 +121,8 @@ namespace CppRange {
                                                         // add a Range into a list of ranges
     static std::ostream& streamout(const std::list<RangeMapBase>&, std::ostream& os);
                                                         // stream out a range list
+    static std::string toString(const std::list<RangeMapBase>&);                       
+                                                        // simple conversion to string 
 
   private:
     // Disable some derived member functions
@@ -295,6 +298,12 @@ namespace CppRange {
   std::ostream& RangeMapBase<T>::streamout(std::ostream& os) const{
     RangeElement<T>::streamout(os);
     return streamout(child, os);
+  }
+
+  // convert to string
+  template<class T> inline
+  std::string RangeMapBase<T>::toString() const{
+    return RangeElement<T>::toString() + toString(child);
   }
 
   //////////////////////////////////
@@ -653,6 +662,27 @@ namespace CppRange {
       }
     }
     return os;
+  }
+
+  // convert to string
+  template<class T> inline
+  std::string RangeMapBase<T>::toString(const std::list<RangeMapBase>& rlist) {
+    std::string rv;
+    if(!rlist.empty()) {
+      if(rlist.size() > 1) {  // more than one sub-ranges
+        rv += "{";
+        for(typename std::list<RangeMapBase<T> >::const_iterator it = rlist.begin();
+            it != rlist.end(); ) {
+          rv += it->toString();
+          ++it;
+          if(it != rlist.end()) rv += ";";
+        }
+        rv += "}";
+      } else {                // only one sub-range
+        rv += rlist.front().toString();
+      }
+    }
+    return rv;
   }
 
   // standard out stream

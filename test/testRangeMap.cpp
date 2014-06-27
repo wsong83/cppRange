@@ -39,6 +39,7 @@ using std::string;
 int main() {
 
   unsigned int index = 0;
+  std::string result;
 
   /////////////////////////////////////////////////////////////
   cout << "===========================" << endl;
@@ -231,35 +232,115 @@ int main() {
   if(!test(toString(RB.proper_superset(RC)), "0", false, cout)) return 1;
   
   cout << ++index << ". RA is a subset of RF ?" ;
-  if(!test(toString(RA.subset(RF)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.subset(RF));
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.subset(RF));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA is a proper subset of RF ?" ;
-  if(!test(toString(RA.proper_subset(RF)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.proper_subset(RF));
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.proper_subset(RF));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA is a superset of RF ?" ;
-  if(!test(toString(RA.superset(RF)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.superset(RF));
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.superset(RF));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA is a proper superset of RF ?" ;
-  if(!test(toString(RA.proper_superset(RF)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.proper_superset(RF));
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.proper_superset(RF));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA is a subset of RE ?" ;
-  if(!test(toString(RA.subset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.subset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.subset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is a proper subset of RE ?" ;
-  if(!test(toString(RA.proper_subset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.proper_subset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.proper_subset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is a superset of RE ?" ;
-  if(!test(toString(RA.superset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.superset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.superset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is a proper superset of RE ?" ;
-  if(!test(toString(RA.proper_superset(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.proper_superset(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.proper_superset(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -288,11 +369,31 @@ int main() {
   if(!test(toString(RA & RC), "[2][-4]", false, cout)) return 1;
 
   cout << ++index << ". RA & RF =>" ;
-  if(!test(toString(RA & RF), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA & RF);
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA & RF);
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA & RE =>" ;
-  if(!test(toString(RA & RE), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA & RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA & RE);
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -321,11 +422,31 @@ int main() {
   if(!test(toString(RA | RC), toString(RA), false, cout)) return 1;
 
   cout << ++index << ". RA | RF =>" ;
-  if(!test(toString(RA | RF), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA | RF);
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA | RF);
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA | RE =>" ;
-  if(!test(toString(RA | RE), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA | RE);
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA | RE);
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -354,11 +475,31 @@ int main() {
   if(!test(toString(RA.complement(RC)), "{[3][12:-5];[2]{[12:-3];[-5]};[1:0][12:-5]}", false, cout)) return 1;
 
   cout << ++index << ". RA deducted by RF ?" ;
-  if(!test(toString(RA.complement(RF)), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.complement(RF));
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA.complement(RF));
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA deducted by RE ?" ;
-  if(!test(toString(RA.complement(RE)), "[]", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.complement(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "[]";
+  }
+#else
+  result = toString(RA.complement(RE));
+#endif
+  if(!test(result, "[]", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   /////////////////////////////////////////////////////////////
@@ -399,19 +540,59 @@ int main() {
   if(!test(toString(RA.disjoint(RC)), "0", false, cout)) return 1;
 
   cout << ++index << ". RA overlaps with RF ?";
-  if(!test(toString(RA.overlap(RF)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.overlap(RF));
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.overlap(RF));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA is disjoint with RF ?";
-  if(!test(toString(RA.disjoint(RF)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.disjoint(RF));
+  } catch ( RangeException_NonComparable e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.disjoint(RF));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *not comparable due to different numbers of dimensions.")) return 1;
 
   cout << ++index << ". RA overlaps with RE ?";
-  if(!test(toString(RA.overlap(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.overlap(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.overlap(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   cout << ++index << ". RA is disjoint with RE ?";
-  if(!test(toString(RA.disjoint(RE)), "0", false, cout,
+#ifndef CPP_RANGE_NO_EXCEPTION
+  try {
+    result = toString(RA.disjoint(RE));
+  } catch ( RangeException_InvalidRange e) {
+    cout << "\n" << e.what() << endl;
+    result = "0";
+  }
+#else
+  result = toString(RA.disjoint(RE));
+#endif
+  if(!test(result, "0", false, cout,
            "\n  *invalid operation due to RE is invalid.")) return 1;
 
   // dimension

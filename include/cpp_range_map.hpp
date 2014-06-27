@@ -90,6 +90,7 @@ namespace CppRange {
     RangeMap complement(const RangeMap& r) const;       // subtract r from this range
     
     std::ostream& streamout(std::ostream& os) const;    // stream out the range
+    std::string toString() const;                       // simple conversion to string 
 
   private:
     virtual bool comparable(const RangeMap& r) const;   // ? this and r can be compared 
@@ -197,103 +198,209 @@ namespace CppRange {
   // check this is a subset of r
   template<class T> inline
   bool RangeMap<T>::subset(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return true;
     if(r.empty()) return false;
-    if(!comparable(r)) return false; // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "subset()"));
+#endif
+      return false; // or throw an exception
+    }
     return RangeMapBase<T>::subset(child, r.child);
   }
 
   // check this is a proper subset of r
   template<class T> inline
   bool RangeMap<T>::proper_subset(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return !r.empty();
     if(r.empty()) return false;
-    if(!comparable(r)) return false; // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "proper_subset()"));
+#endif
+      return false; // or throw an exception
+    }
     return RangeMapBase<T>::subset(child, r.child) && !equal(r);
   }
 
   // check this is a superset of r
   template<class T> inline
   bool RangeMap<T>::superset(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(r.empty()) return true;
     if(empty()) return false;
-    if(!comparable(r)) return false; // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "superset()"));
+#endif
+      return false; // or throw an exception
+    }
     return RangeMapBase<T>::subset(r.child, child);
   }
 
   // check this is a proper superset of r
   template<class T> inline
   bool RangeMap<T>::proper_superset(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return false;
+     if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(r.empty()) return !empty();
     if(empty()) return false;
-    if(!comparable(r)) return false; // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "proper_superset()"));
+#endif
+      return false; // or throw an exception
+    }
     return RangeMapBase<T>::subset(r.child, child) && !equal(r);
   }
 
   // check this is a singleton
   template<class T> inline
   bool RangeMap<T>::singleton() const {
-    if(!valid()) return false;
+    if(!valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return empty() || size() == min_unit<T>();
   } 
 
   // check whether range r is equal with this range
   template<class T> inline
   bool RangeMap<T>::equal(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return false;
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     if(empty()) return r.empty();
-    if(!comparable(r)) return false; // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "=="));
+#endif
+      return false; // or throw an exception
+    }
+
     return RangeMapBase<T>::equal(child, r.child);
   }
 
   // check whether r has shared range with this range
   template<class T> inline
   bool RangeMap<T>::overlap(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return false;
-    if(empty() || r.empty()) return false;
-    if(!comparable(r)) return false; // should throw an exception
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
+    if(empty() || r.empty())  return false;
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "overlap()"));
+#endif
+      return false; // or throw an exception
+    }
     return !intersection(r).empty(); // if A&B != []; then A and B are overlapped
   }
 
   // check whether r is disjoint with this range
   template<class T> inline
   bool RangeMap<T>::disjoint(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return false;
-    if(empty() || r.empty()) return true;
-    if(!comparable(r)) return false; // should throw an exception
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
+    if(empty() || r.empty())  return true;
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "disjoint()"));
+#endif
+      return false; // or throw an exception
+    }
     return intersection(r).empty(); // if A&B == []; then A and B are disjoint
   }
 
   // combine two ranges
   template<class T> inline
   RangeMap<T> RangeMap<T>::combine(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return RangeMap();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return RangeMap();
+    }
     if(empty()) return r;
     if(r.empty()) return *this;
-    if(!comparable(r)) return RangeMap(); // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "|"));
+#endif
+      return RangeMap(); // or throw an exception
+    }
     return RangeMap(RangeMapBase<T>::combine(child, r.child));
   }
 
   // get the shared range of two ranges
   template<class T> inline
   RangeMap<T> RangeMap<T>::intersection(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return RangeMap();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return RangeMap();
+    }
     if(empty() || r.empty()) return RangeMap();
-    if(!comparable(r)) return RangeMap(); // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "&"));
+#endif
+      return RangeMap(); // or throw an exception
+    }
     return RangeMap(RangeMapBase<T>::intersection(child, r.child));
   }
 
   // this deducted by r
   template<class T> inline
   RangeMap<T> RangeMap<T>::complement(const RangeMap& r) const {
-    if(!valid() || !r.valid()) return RangeMap();
+    if(!valid() || !r.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return RangeMap();
+    }
     if(empty()) return RangeMap();
     if(r.empty()) return *this;
-    if(!comparable(r)) return RangeMap(); // should throw an exception
+    if(!comparable(r)) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_NonComparable(toString(), r.toString(), "complement()"));
+#endif
+      return RangeMap(); // or throw an exception
+    }
     return RangeMap(RangeMapBase<T>::complement(child, r.child));
   }
 
@@ -304,6 +411,17 @@ namespace CppRange {
       os << "[]";
       return os;
     } else return RangeMapBase<T>::streamout(child, os);
+  }
+
+  // convert to string
+  template<class T> inline
+  std::string RangeMap<T>::toString() const {
+    std::string rv;
+    if(!valid() || empty())
+      rv = "[]";
+    else 
+      rv = RangeMapBase<T>::toString(child);
+    return rv;
   }
 
   /////////////////////////////////////////////
@@ -327,7 +445,12 @@ namespace CppRange {
   // two ranges are not equal
   template <class T>
   inline bool operator!= (const RangeMap<T>& lhs, const RangeMap<T>& rhs) {
-    if(!lhs.valid() || !rhs.valid()) return false; // or throw an exception
+    if(!lhs.valid() || !rhs.valid()) {
+#ifndef CPP_RANGE_NO_EXCEPTION
+      throw(RangeException_InvalidRange());
+#endif
+      return false;
+    }
     return !rhs.equal(lhs);
   }
 

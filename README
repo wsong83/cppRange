@@ -1,9 +1,10 @@
-cppRange (1.0)
+cppRange (1.01)
 ========
 
 A C++ static multi-dimentional range calculation (interval calculation) library.
 
-This library provides a set of operations on static multi-dimension range expressions.
+This library provides a set of operations on static multi-dimension range 
+expressions.
 
 ========
 A mult-dimension static range can be expressed as:
@@ -12,15 +13,17 @@ A mult-dimension static range can be expressed as:
 1-dimension:     [3:0]                RangeElement / Range / RangeMap
 Multi-dimension: [5:0][2:-1]          Range / RangeMap
 
-* range expression is always expressed as [higher bound : lower bound]. 
-  if the lower bound is actually larger than the higher bound, it is illegal, such as [2:3].
+* Range expression is always expressed as [higher bound : lower bound]. 
+  If the lower bound is actually larger than the higher bound, it is illegal, 
+  such as [2:3].
 
-Three type of range classes are provided for user:
+Three types of range classes are provided for user:
 1. RangeElement
    A single dimension range expression.
    Example: [1:0]
 2. Range
-   A multidimensional range expression storing ranges described by a single range vector.
+   A multidimensional range expression storing ranges described by a single 
+   range vector.
    Example: [3:0][5:-2]
 3. RangeMap
    A arbitrary multidimensional range expression.
@@ -50,8 +53,10 @@ Advantages:
      No other library can calculate the following expressions:
      [5:0][0:-5] | [8:4][6:-3]
      [10:0][10:0] deducted by [3:0][5:5]
-2. Compatible with hardware description languages which also use [high:low] ranges.
-3. Provides a strict order beween range vectors (still inavailable for RangeMap objects).
+2. Compatible with hardware description languages which also use [high:low] 
+   ranges.
+3. Provides a strict order beween range vectors (still inavailable for RangeMap 
+   objects).
 
 Disadvantages:
 1. Only support integer ranges. (no support for float/double precision ranges).
@@ -88,34 +93,56 @@ The supported calculations:
 
 The support for different type of ranges
 
-                valid() empty() dimension() subset() superset() overlap() connected() disjoint() 
-RangeElement      Y       Y         N         Y          Y        Y          Y           Y
-Range             Y       Y         Y         Y          Y        Y          Y           Y
-RangeMap          Y       Y         Y         Y          Y        Y          N[1]        Y
+                valid() empty() dimension() subset() superset() overlap()  
+RangeElement      Y       Y         N         Y          Y        Y      
+Range             Y       Y         Y         Y          Y        Y          
+RangeMap          Y       Y         Y         Y          Y        Y     
+
+                connected() disjoint() equal() less() combine() hull() 
+RangeElement        Y          Y          Y       Y        Y[2]    Y
+Range               Y          Y          Y       Y        Y[2]    Y
+RangeMap            N[1]       Y          Y       N[3]     Y       N[4]
+
+
+                hull() intersection() complement()   <<
+RangeElement      Y            Y            Y[2]      Y
+Range             Y            Y            Y[2]      Y
+RangeMap          N[4]         Y            Y         Y
 
 -------
-[1] connect() is normally used to check whether two range can be combined into a 
-single range vector. Since combine() operation is always available for RangeMap, 
-connected() function is useless. Also, it is difficult to define how two set of 
-range vectors are adjacent.
+[1] connect() is normally used to check whether two range can be combined into 
+    a single range vector. Since combine() operation is always available for 
+    RangeMap, connected() function is useless. Also, it is difficult to define 
+    how two set of range vectors are adjacent.
 
-                equal() less() combine() hull() intersection() complement() <<
-RangeElement      Y       Y        Y[2]    Y          Y            Y[2]      Y
-Range             Y       Y        Y[2]    Y          Y            Y[2]      Y
-RangeMap          Y       N[3]     Y       N[4]       Y            Y         Y
-
--------
 [2] When the result can not be represented, a empty range is returned. 
     For example, it is impossible to represent the result of
       [2:0] | [5:4]
-    In this case, the range should be represented using RangeMap and the results will
-    be stored as a set of ranges:
+    In this case, the range should be represented using RangeMap and the 
+    results will be stored as a set of ranges:
       {[5:4];[2:0]}
 [3] It is extremely difficult to provide a strict order for RangeMap.
     Considering this exmaple
     ? {[10:3][1:0];[2:0][3:0]} > {[10][1:0];[9:8][3:0];[3:0][3:0]}
-[4] hull() is used when the union of two ranges cannot be represented by a single range.
+[4] hull() is used when the union of two ranges cannot be represented by a 
+    single range.
     For RangeMap, the result of combine() and hull() are always the same.
+
+========
+Exception
+  When illegal operations are requested, exceptions are generated (default).
+  std::exception
+    \__RangeException_Base                  Base exception type
+         \__RangeException_InvalidRange     Operand invalid
+         \__RangeException_NonPresentable   Result cannot be represented
+         \__RangeException_NonOperable      More than one dimension is different
+         |                                  when operating two Range objects
+         \__RangeException_NonComparable    Two ranges have different dimensions
+
+  The exception feature can be disable by define the macro:
+      #define CPP_RANGE_NO_EXCEPTION
+  before including all cppRange header files.
+  In this case, an empty range will be return silently.
 
 ========
 Class inheritage
@@ -150,4 +177,4 @@ IT 302 Computer Science
 University of Manchester
 M13 9PL UK
 
-25/06/2014
+27/06/2014

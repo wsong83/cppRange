@@ -1,7 +1,4 @@
 Features
-        * [High]   Allow throwing exception when some illegal range operation is done. Currently 
-                   the result is assigned to empty silently. User may not notice the error, which 
-                   may results in misunderstanding or difficulties in debug.
         * [Median] Support infinit boundaries, which is useful for mathematical calculations.
         * [Median] Add support for open/close bound types notation. Currently all boundaries are 
                    assumed close. This is useful for general mathematical calculations.

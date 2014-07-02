@@ -766,7 +766,7 @@ namespace CppRange {
   // two ranges are equal
   template <class T>
   inline bool operator== (const Range<T>& lhs, const Range<T>& rhs) {
-    return rhs.equal(lhs);
+    return lhs.equal(rhs);
   }
 
   // two ranges are not equal

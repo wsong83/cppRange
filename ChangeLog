@@ -1,3 +1,6 @@
+	* Add Range(RangeElement) to construct a one dimensional Range directly from
+	  a RangeElment.
+	* Add << operator for standard output stream.
 	* Add a new method RangeMap<T>::toRange() to break a RangeMap into a
 	  list of Range objects.  5ac6568
         * Bug fix in Range<T>::equal()  9cf9e75

@@ -1,4 +1,5 @@
 Release 1.02	~30/08/2014
+	* Bug fix in RangeMapBase<T>::combine(). 212bb63
 	* Replace streamout() helper method with toString(). 3c43284
 	* Add Range(RangeElement) to construct a one dimensional Range directly from
 	  a RangeElment. 03775e8

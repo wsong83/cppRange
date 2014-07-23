@@ -246,7 +246,7 @@ namespace CppRange {
   RangeMapBase<T>::combine(const RangeMapBase& r) const {
     boost::tuple<RangeMapBase, RangeMapBase, RangeMapBase> rv;
     
-    RangeElement<T> RAnd = RangeElement<T>::combine(r);
+    RangeElement<T> RAnd = RangeElement<T>::intersection(r);
     if(!RAnd.empty()) {
       // get the standard division
       RangeElement<T> rH, rM, rL;

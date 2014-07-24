@@ -297,6 +297,7 @@ namespace CppRange {
       return false;
     }
     if(empty()) return r.empty();
+    if(r.empty()) return false;
     if(!comparable(r)) {
 #ifndef CPP_RANGE_NO_EXCEPTION
       throw(RangeException_NonComparable(toString(), r.toString(), "=="));

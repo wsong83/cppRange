@@ -236,7 +236,6 @@ namespace CppRange {
   // check whether range r is equal with this range
   template<class T> inline
   bool RangeMapBase<T>::equal(const RangeMapBase& r) const {
-    if(empty()) return r.empty();
     return RangeElement<T>::equal(r) && equal(child, r.child);
   }
   
